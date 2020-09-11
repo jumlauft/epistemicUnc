@@ -1,15 +1,18 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow_probability as tfp
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler
 from scipy.spatial.distance import cdist
+from numba import cuda 
+from numba.cuda.random import create_xoroshiro128p_states, xoroshiro128p_normal_float32
+import math
+
 
 class NegSEp:
-    TRAIN_EPOCHS = 10
-    TRAIN_ITER = 10
+    TRAIN_EPOCHS = 1
+    TRAIN_ITER = 3
     N_HIDDEN = 50
     LEARNING_RATE = 0.01
     MOMENTUM = 0.0001
@@ -110,9 +113,9 @@ class NegSEp:
         for i in range(self.TRAIN_ITER):
             # hist = self.model_out.fit(self.Xtr, self.Ytr, **kwargs)
             hist_epi = self.model_epi.fit(xepis, self.y_epi, class_weight=cw,
-                                          epochs=self.TRAIN_EPOCHS, verbose=0)
+                                          epochs=self.TRAIN_EPOCHS, verbose=1)
             hist = self.model_mean.fit(xtrs, self.Ytr,
-                                       epochs=self.TRAIN_EPOCHS, verbose=0)
+                                       epochs=self.TRAIN_EPOCHS, verbose=1)
 
             if np.isnan(hist_epi.history['loss']).any():
                 print('detected Nan')
@@ -174,32 +177,65 @@ class NegSEp:
 
         # ALTERNATIVE 3
         # Generate uncertain points
-        cov = 0.2 * np.eye(self.DX)
+        cov = 0.2
+        Nepi = 2 * self.DX
+        '''
+        cov_mat = 0.2 * np.eye(self.DX)
         x_epilist = []
         distance = []
-        from time import time
-
-        tnew = time()
         for x in self.Xtr[:100,:]:
-            xepi = np.random.multivariate_normal(x, cov, 2 * self.DX)
+            xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
             x_epilist.append(xepi)
             distance.extend(cdist(xepi,self.Xtr).min(axis=1))
-        print(time() - tnew)
-
         x_epi = np.concatenate(x_epilist, axis=0)
+        d = np.array(distance)
+        '''
+        Xtr = np.ascontiguousarray(self.Xtr, dtype = np.float32)
+        print('start...')
+        # cuda.select_device(2)
+        @cuda.jit
+        def generate_rand(rng_states, Xtr, cov, Xepi, d):
+            thread_id = cuda.grid(1)
+            ntr, Dx = Xtr.shape
+            if thread_id < ntr:
+                # Generate random points
+                for nepi in range(Nepi):
+                    for dx in range(Dx):
+                        Xepi[thread_id,dx,nepi] = Xtr[thread_id,dx] + \
+                                    math.sqrt(cov)*xoroshiro128p_normal_float32(rng_states, thread_id) 
+                # Compute distances
+                for nepi in range(Nepi):
+                    smallest = 1e9
+                    for nt in range(ntr):
+                        dist = 0
+                        for dx in range(Dx):
+                            dist += (Xepi[thread_id,dx,nepi] - Xtr[nt,dx])**2
+                        if dist < smallest:
+                            smallest = dist
+                    d[thread_id,nepi] = smallest
+
+        threads_per_block = 128
+        blocks_per_grid = math.ceil(ntr / threads_per_block)
+        rng_states = create_xoroshiro128p_states(ntr, seed=1)
+        x_epi = np.zeros((ntr,self.DX,Nepi), dtype=np.float32)
+        d = np.zeros((ntr,Nepi), dtype=np.float32)
+        generate_rand[blocks_per_grid, threads_per_block](rng_states, Xtr, cov, x_epi,d)
+        x_epi = x_epi.reshape(-1,self.DX)
+        
+
+        
         y_epi = np.ones((x_epi.shape[0], 1))
-        del x_epilist,
+        idx = np.argpartition(d.reshape(-1), ntr)
+
         # find closest uncertain points
         # d = x_epi.reshape(1, -1, self.DX) - self.Xtr.reshape(-1, 1, self.DX)
         # distance = np.sum(d ** 2, axis=2)
         # idx = np.argpartition(distance.min(axis=0), ntr)
 
-        # find closest uncertain points with loop
 
-        idx = np.argpartition(np.array(distance), ntr)
 
         # replace by training data input and turn into certain points
         y_epi[idx[:ntr], :] = 0
         x_epi[idx[:ntr], :] = self.Xtr
+        print('Generated XY epi')
         return x_epi, y_epi
-

@@ -1,9 +1,10 @@
 import numpy as np
-from src import negsep
-from src import dropout
-from src import gpmodel
-from src import bnn
+import negsep
+import dropout
+import gpmodel
+import bnn
 import matplotlib.pyplot as plt
+
 
 print('Read data...')
 name = "synthetic_data_1D"
@@ -14,7 +15,8 @@ name = "sarcos"
 train_data = np.genfromtxt('data/'+name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('data/'+name+'_test.csv', delimiter=',')
 
-xtr, ytr = train_data[:,:-1], train_data[:,-1:]
+Ntr = 10000
+xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
 
@@ -26,8 +28,8 @@ dy = ytr.shape[1]
 models = []
 # models.append(bnn.BayesianNeuralNetwork(dx,dy))
 # models.append(gpmodel.GPmodel(dx,dy))
-models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
-# models.append(dropout.Dropout(dx,dy))
+# models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
+models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
