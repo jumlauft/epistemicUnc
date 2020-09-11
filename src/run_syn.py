@@ -15,7 +15,7 @@ name = "sarcos"
 train_data = np.genfromtxt('data/'+name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('data/'+name+'_test.csv', delimiter=',')
 
-Ntr = 10000
+Ntr = 1000
 xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
@@ -27,16 +27,20 @@ dy = ytr.shape[1]
 # Model setup
 models = []
 # models.append(bnn.BayesianNeuralNetwork(dx,dy))
-# models.append(gpmodel.GPmodel(dx,dy))
-# models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
-models.append(dropout.Dropout(dx,dy))
+#models.append(gpmodel.GPmodel(dx,dy))
+models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
+#models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
-    print('Processing:'+ model_name+'....')
+    print('Processing '+ model_name + ':')
+    print('Adding Data...')
     model.add_data(xtr,ytr)
+    print('Training...')
     model.train()
+    
     # Evaluation
+    
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))

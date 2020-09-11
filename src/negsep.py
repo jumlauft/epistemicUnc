@@ -179,48 +179,50 @@ class NegSEp:
         # Generate uncertain points
         cov = 0.2
         Nepi = 2 * self.DX
-        '''
-        cov_mat = 0.2 * np.eye(self.DX)
-        x_epilist = []
-        distance = []
-        for x in self.Xtr[:100,:]:
-            xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
-            x_epilist.append(xepi)
-            distance.extend(cdist(xepi,self.Xtr).min(axis=1))
-        x_epi = np.concatenate(x_epilist, axis=0)
-        d = np.array(distance)
-        '''
-        Xtr = np.ascontiguousarray(self.Xtr, dtype = np.float32)
-        print('start...')
-        # cuda.select_device(2)
-        @cuda.jit
-        def generate_rand(rng_states, Xtr, cov, Xepi, d):
-            thread_id = cuda.grid(1)
-            ntr, Dx = Xtr.shape
-            if thread_id < ntr:
-                # Generate random points
-                for nepi in range(Nepi):
-                    for dx in range(Dx):
-                        Xepi[thread_id,dx,nepi] = Xtr[thread_id,dx] + \
-                                    math.sqrt(cov)*xoroshiro128p_normal_float32(rng_states, thread_id) 
-                # Compute distances
-                for nepi in range(Nepi):
-                    smallest = 1e9
-                    for nt in range(ntr):
-                        dist = 0
+        
+        if tf.config.list_physical_devices('GPU') == 0:
+            print('Sampling EPI points on CPU')
+            cov_mat = 0.2 * np.eye(self.DX)
+            x_epilist = []
+            distance = []
+            for x in self.Xtr[:100,:]:
+                xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
+                x_epilist.append(xepi)
+                distance.extend(cdist(xepi,self.Xtr).min(axis=1))
+            x_epi = np.concatenate(x_epilist, axis=0)
+            d = np.array(distance)
+        else:
+            print('Sampling EPI points on GPU')
+            Xtr = np.ascontiguousarray(self.Xtr, dtype = np.float32)
+            # cuda.select_device(2)
+            @cuda.jit
+            def generate_rand(rng_states, Xtr, cov, Xepi, d):
+                thread_id = cuda.grid(1)
+                ntr, Dx = Xtr.shape
+                if thread_id < ntr:
+                    # Generate random points
+                    for nepi in range(Nepi):
                         for dx in range(Dx):
-                            dist += (Xepi[thread_id,dx,nepi] - Xtr[nt,dx])**2
-                        if dist < smallest:
-                            smallest = dist
-                    d[thread_id,nepi] = smallest
+                            Xepi[thread_id,dx,nepi] = Xtr[thread_id,dx] + \
+                                        math.sqrt(cov)*xoroshiro128p_normal_float32(rng_states, thread_id) 
+                    # Compute distances
+                    for nepi in range(Nepi):
+                        smallest = 1e9
+                        for nt in range(ntr):
+                            dist = 0
+                            for dx in range(Dx):
+                                dist += (Xepi[thread_id,dx,nepi] - Xtr[nt,dx])**2
+                            if dist < smallest:
+                                smallest = dist
+                        d[thread_id,nepi] = smallest
 
-        threads_per_block = 128
-        blocks_per_grid = math.ceil(ntr / threads_per_block)
-        rng_states = create_xoroshiro128p_states(ntr, seed=1)
-        x_epi = np.zeros((ntr,self.DX,Nepi), dtype=np.float32)
-        d = np.zeros((ntr,Nepi), dtype=np.float32)
-        generate_rand[blocks_per_grid, threads_per_block](rng_states, Xtr, cov, x_epi,d)
-        x_epi = x_epi.reshape(-1,self.DX)
+            threads_per_block = 128
+            blocks_per_grid = math.ceil(ntr / threads_per_block)
+            rng_states = create_xoroshiro128p_states(ntr, seed=1)
+            x_epi = np.zeros((ntr,self.DX,Nepi), dtype=np.float32)
+            d = np.zeros((ntr,Nepi), dtype=np.float32)
+            generate_rand[blocks_per_grid, threads_per_block](rng_states, Xtr, cov, x_epi,d)
+            x_epi = x_epi.reshape(-1,self.DX)
         
 
         
@@ -237,5 +239,4 @@ class NegSEp:
         # replace by training data input and turn into certain points
         y_epi[idx[:ntr], :] = 0
         x_epi[idx[:ntr], :] = self.Xtr
-        print('Generated XY epi')
         return x_epi, y_epi
