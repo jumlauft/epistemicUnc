@@ -55,7 +55,7 @@ class Dropout:
     def train(self):
 
         history = self.model.fit(self.Xtr, self.Ytr, epochs=self.TRAIN_EPOCHS,
-                                 batch_size = self.BATCH_SIZE, verbose=0)
+                                 batch_size = self.BATCH_SIZE, verbose=1)
         return history.history['loss']
 
     def predict(self,x):

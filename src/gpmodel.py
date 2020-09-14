@@ -1,5 +1,6 @@
 import numpy as np
 import GPy
+from utils import scale_to_unit, weighted_RMSE
 
 
 class GPmodel:
@@ -67,7 +68,7 @@ class GPmodel:
         epistemic uncertainty output
 
         """
-        # self.GP.optimize(messages=True)
+        self.GP.optimize(messages=True)
 
     def predict(self, x):
         """ Predicts outputs of the NN model for the given input x
@@ -79,32 +80,8 @@ class GPmodel:
             mean, aleatoric uncertainty, epistemic uncertainty
         """
         (ypred, epi) = self.GP.predict_noiseless(x)
-        return ypred, epi
+        return ypred, scale_to_unit(epi)
 
-    def predict_mean(self, x):
-        """ Predicts mean outputs of the NN model for the given input x
-
-        Args:
-            x: input
-
-        Returns:
-            mean prediction
-        """
-        (mean, _) = self.GP.predict_noiseless(x)
-        return mean.flatten()
-
-    def predict_epistemic(self, x):
-        """ Predicts epistemic uncertainty of the NN model for the given input x
-
-        Args:
-            x: input
-
-        Returns:
-            epistemic uncertainty prediction
-        """
-        (_, epi) = self.GP.predict_noiseless(x)
-
-        return epi.flatten()
 
     def add_data(self, xtr, ytr):
         """ Adds new training data points to the disturbance model
@@ -126,6 +103,6 @@ class GPmodel:
 
         self.GP = GPy.models.GPRegression(self.Xtr,self.Ytr, self.kernel)
 
-    def epi_accuracy(self,xte,yte):
+    def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
-        return (((ypred-yte)**2)*(1-epi)).mean()*epi.mean()
+        return weighted_RMSE(yte,ypred, epi)

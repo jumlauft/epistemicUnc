@@ -7,7 +7,7 @@ def scale_to_unit(epi):
 def weighted_RMSE(yte, ypred, epi):
     epis = scale_to_unit(epi) + 0.000001
     RMSE = np.sqrt(((ypred - yte) ** 2).mean())
-    print('RSME: ' + str(RMSE))
+    print('RMSE: ' + str(RMSE))
     discounted_RMSE = np.sqrt((((ypred - yte) ** 2) / epis).mean())
     print('Discounted RMSE: ' + str(discounted_RMSE))
     total_discount = epis.mean()

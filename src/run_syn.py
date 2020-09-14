@@ -4,20 +4,21 @@ import dropout
 import gpmodel
 import bnn
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 np.random.seed(1)
 
-print('Read data...')
-name = "synthetic_data_1D"
-# name = "synthetic_data_2D_square"
-# name = "synthetic_data_2D_gaussian"
-# name = "sarcos"
+# git data_name = "synthetic_data_1D"
+# data_name = "synthetic_data_2D_square"
+# data_name = "synthetic_data_2D_gaussian"
+data_name = "sarcos"
+print('Read data' + data_name + '...')
 
-train_data = np.genfromtxt('../data/'+name+'_train.csv', delimiter=',')
-test_data = np.genfromtxt('../data/'+name+'_test.csv', delimiter=',')
+train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
+test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 1000
-xtr, ytr = train_data[:,:-1], train_data[:,-1:]
+Ntr = 2000
+xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
 
@@ -28,7 +29,7 @@ dy = ytr.shape[1]
 # Model setup
 models = []
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
-# models.append(gpmodel.GPmodel(dx,dy))
+models.append(gpmodel.GPmodel(dx,dy))
 models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
 models.append(dropout.Dropout(dx,dy))
 

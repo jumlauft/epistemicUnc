@@ -7,13 +7,13 @@ from sklearn.preprocessing import StandardScaler
 import math
 from utils import scale_to_unit, weighted_RMSE
 class NegSEp:
-    TRAIN_EPOCHS = 10
-    TRAIN_ITER = 10
+    TRAIN_EPOCHS = 5
+    TRAIN_ITER = 3
     N_HIDDEN = 50
     LEARNING_RATE = 0.01
     MOMENTUM = 0.0001
-    RADIUS_TR = 0.0001
-    N_EPI = 1000
+    RADIUS_EPI = 1
+    N_EPI = 2
 
     def __init__(self, dx, dy, input_lb, input_up):
         """ Online disturbance model to differentiate types of uncertainties
@@ -110,7 +110,7 @@ class NegSEp:
         for i in range(self.TRAIN_ITER):
             # hist = self.model_out.fit(self.Xtr, self.Ytr, **kwargs)
             hist_epi = self.model_epi.fit(xepis, self.y_epi, class_weight=cw,
-                                          epochs=self.TRAIN_EPOCHS, verbose=0)
+                                          epochs=self.TRAIN_EPOCHS, verbose=1)
             hist = self.model_mean.fit(xtrs, self.Ytr,
                                        epochs=self.TRAIN_EPOCHS, verbose=0)
 
@@ -174,8 +174,8 @@ class NegSEp:
 
         # ALTERNATIVE 3
         # Generate uncertain points
-        cov = 0.2
-        Nepi = 2 * self.DX
+        cov = self.RADIUS_EPI
+        Nepi = self.N_EPI * self.DX
         
         if len(tf.config.list_physical_devices('GPU')) == 0:
             from scipy.spatial.distance import cdist
@@ -205,8 +205,8 @@ class NegSEp:
                     # Generate random points
                     for nepi in range(Nepi):
                         for dx in range(Dx):
-                            Xepi[thread_id,dx,nepi] = Xtr[thread_id,dx] + \
-                                        math.sqrt(cov)*xoroshiro128p_normal_float32(rng_states, thread_id) 
+                            Xepi[thread_id,dx,nepi] = Xtr[thread_id,dx] + math.sqrt(float(cov)) * \
+                            xoroshiro128p_normal_float32(rng_states, thread_id) 
                     # Compute distances
                     for nepi in range(Nepi):
                         smallest = 1e9
