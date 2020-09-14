@@ -37,7 +37,10 @@ class Dropout:
         self.DX = dx
         self.DY = dy
         self.model = self._setup_nn()
+
     def _setup_nn(self):
+        tf.random.set_seed(0)
+
         model = Sequential()
         model.add(InputLayer(input_shape=(self.DX,)))
         model.add(PermaDropout(rate = self.DROPOUT_RATE))

@@ -6,8 +6,6 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler
 import math
 from utils import scale_to_unit, weighted_RMSE
-
-
 class NegSEp:
     TRAIN_EPOCHS = 10
     TRAIN_ITER = 10
@@ -59,7 +57,6 @@ class NegSEp:
         self.loss = []
         self.model_epi, self.model_mean, self.model_all = self._setup_nn
 
-
     @property
     def _setup_nn(self):
         """ Sets up the neural network structure for the disturbance model
@@ -74,6 +71,8 @@ class NegSEp:
             model_all: model to all outputs at once
 
         """
+        tf.random.set_seed(0)
+
         inp = Input(shape=(self.DX,))
         hidden = Dense(self.N_HIDDEN, activation="relu")(inp)
         hidden = Dense(self.N_HIDDEN, activation="relu")(hidden)

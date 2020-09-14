@@ -5,9 +5,11 @@ import gpmodel
 import bnn
 import matplotlib.pyplot as plt
 
+np.random.seed(1)
+
 print('Read data...')
-# name = "synthetic_data_1D"
-name = "synthetic_data_2D_square"
+name = "synthetic_data_1D"
+# name = "synthetic_data_2D_square"
 # name = "synthetic_data_2D_gaussian"
 # name = "sarcos"
 
