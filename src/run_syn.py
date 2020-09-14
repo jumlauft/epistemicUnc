@@ -4,6 +4,7 @@ import dropout
 import gpmodel
 import bnn
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 np.random.seed(1)
 
@@ -26,14 +27,15 @@ dy = ytr.shape[1]
 
 
 # Model setup
-models = []
+models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
-# models.append(gpmodel.GPmodel(dx,dy))
-models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
+models.append(gpmodel.GPmodel(dx,dy))
+# models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
 models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
+    results.append([model_name])
     print('Processing '+ model_name + ':')
     print('Adding Data...')
     model.add_data(xtr,ytr)
@@ -41,7 +43,7 @@ for model in models:
     model.train()
     
     # Evaluation
-    print('Epistemic-weighted RMSE: ' + str(model.weighted_RMSE(xte,yte)))
+    results[-1].extend(model.weighted_RMSE(xte,yte))
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
@@ -87,6 +89,7 @@ for model in models:
         RMSE = np.sqrt(np.sum((modelte - yte)**2,axis=1)).mean()
 
 
+print(tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'total RMSE']))
 
 
 print('Pau')

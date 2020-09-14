@@ -12,4 +12,5 @@ def weighted_RMSE(yte, ypred, epi):
     print('Discounted RMSE: ' + str(discounted_RMSE))
     total_discount = epis.mean()
     print('Total Discount: ' + str(total_discount))
-    return discounted_RMSE * total_discount
+    return discounted_RMSE * total_discount, RMSE, \
+           discounted_RMSE, total_discount
