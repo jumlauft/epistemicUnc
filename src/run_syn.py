@@ -13,8 +13,8 @@ name = "synthetic_data_1D"
 # name = "synthetic_data_2D_gaussian"
 # name = "sarcos"
 
-train_data = np.genfromtxt('data/'+name+'_train.csv', delimiter=',')
-test_data = np.genfromtxt('data/'+name+'_test.csv', delimiter=',')
+train_data = np.genfromtxt('../data/'+name+'_train.csv', delimiter=',')
+test_data = np.genfromtxt('../data/'+name+'_test.csv', delimiter=',')
 
 Ntr = 1000
 xtr, ytr = train_data[:,:-1], train_data[:,-1:]
