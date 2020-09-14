@@ -3,8 +3,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, InputLayer, Activation
-
-
+from utils import scale_to_unit, weighted_RMSE
 
 class PermaDropout(tf.keras.layers.Layer):
     """Always-on dropout layer, i.e. it does not respect the training flag set to
@@ -28,7 +27,7 @@ class PermaDropout(tf.keras.layers.Layer):
 
 class Dropout:
     N_HIDDEN = 50
-    TRAIN_EPOCHS = 10
+    TRAIN_EPOCHS = 50
     LEARNING_RATE = 0.01
     MOMENTUM = 0.0001
     N_SAMPLES = 1000
@@ -57,11 +56,13 @@ class Dropout:
         return history.history['loss']
 
     def predict(self,x):
+        def sigmoid(x):
+            return 2 / (1 + np.exp(-0.1*x)) -1
         Nte = x.shape[0]
-        Yte = self.model.predict(np.tile(x,(self.N_SAMPLES,1))).reshape(self.N_SAMPLES,Nte).transpose()
-        Yte_std = Yte.std(axis = 1)
-        Yte_mean = Yte.mean(axis = 1)
-        return Yte_mean, Yte_std
+        Yte = self.model.predict(np.tile(x,(self.N_SAMPLES,1))).reshape(self.N_SAMPLES, Nte, self.DY)
+        Yte_std = Yte.std(axis = 0)
+        Yte_mean = Yte.mean(axis = 0)
+        return Yte_mean, scale_to_unit(Yte_std)
 
     def add_data(self, xtr, ytr):
         """ Adds new training data points to the  model
@@ -78,3 +79,6 @@ class Dropout:
             self.Xtr = np.concatenate((self.Xtr, xtr), axis=0)
             self.Ytr = np.concatenate((self.Ytr, ytr), axis=0)
 
+    def weighted_RMSE(self,xte,yte):
+        ypred, epi = self.predict(xte)
+        return weighted_RMSE(yte,ypred, epi)

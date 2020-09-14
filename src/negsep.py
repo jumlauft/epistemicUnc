@@ -4,15 +4,13 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler
-from scipy.spatial.distance import cdist
-from numba import cuda 
-from numba.cuda.random import create_xoroshiro128p_states, xoroshiro128p_normal_float32
 import math
+from utils import scale_to_unit, weighted_RMSE
 
 
 class NegSEp:
-    TRAIN_EPOCHS = 1
-    TRAIN_ITER = 3
+    TRAIN_EPOCHS = 10
+    TRAIN_ITER = 10
     N_HIDDEN = 50
     LEARNING_RATE = 0.01
     MOMENTUM = 0.0001
@@ -113,9 +111,9 @@ class NegSEp:
         for i in range(self.TRAIN_ITER):
             # hist = self.model_out.fit(self.Xtr, self.Ytr, **kwargs)
             hist_epi = self.model_epi.fit(xepis, self.y_epi, class_weight=cw,
-                                          epochs=self.TRAIN_EPOCHS, verbose=1)
+                                          epochs=self.TRAIN_EPOCHS, verbose=0)
             hist = self.model_mean.fit(xtrs, self.Ytr,
-                                       epochs=self.TRAIN_EPOCHS, verbose=1)
+                                       epochs=self.TRAIN_EPOCHS, verbose=0)
 
             if np.isnan(hist_epi.history['loss']).any():
                 print('detected Nan')
@@ -132,8 +130,8 @@ class NegSEp:
         Returns:
             mean, aleatoric uncertainty, epistemic uncertainty
         """
-        mean, epi = self.model_all.predict(self._scaler.transform(x))
-        return mean.flatten(), epi.flatten()
+        ypred, epi = self.model_all.predict(self._scaler.transform(x))
+        return ypred, scale_to_unit(epi)
 
 
     def add_data(self, xtr, ytr):
@@ -180,18 +178,23 @@ class NegSEp:
         cov = 0.2
         Nepi = 2 * self.DX
         
-        if tf.config.list_physical_devices('GPU') == 0:
+        if len(tf.config.list_physical_devices('GPU')) == 0:
+            from scipy.spatial.distance import cdist
+
             print('Sampling EPI points on CPU')
             cov_mat = 0.2 * np.eye(self.DX)
             x_epilist = []
             distance = []
-            for x in self.Xtr[:100,:]:
+            for x in self.Xtr:
                 xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
                 x_epilist.append(xepi)
                 distance.extend(cdist(xepi,self.Xtr).min(axis=1))
             x_epi = np.concatenate(x_epilist, axis=0)
             d = np.array(distance)
         else:
+            from numba import cuda
+            from numba.cuda.random import create_xoroshiro128p_states, \
+                xoroshiro128p_normal_float32
             print('Sampling EPI points on GPU')
             Xtr = np.ascontiguousarray(self.Xtr, dtype = np.float32)
             # cuda.select_device(2)
@@ -240,3 +243,6 @@ class NegSEp:
         y_epi[idx[:ntr], :] = 0
         x_epi[idx[:ntr], :] = self.Xtr
         return x_epi, y_epi
+    def weighted_RMSE(self,xte,yte):
+        ypred, epi = self.predict(xte)
+        return weighted_RMSE(yte,ypred, epi)

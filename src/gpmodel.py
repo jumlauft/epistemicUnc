@@ -78,8 +78,8 @@ class GPmodel:
         Returns:
             mean, aleatoric uncertainty, epistemic uncertainty
         """
-        (mean, epi) = self.GP.predict_noiseless(x)
-        return mean.flatten(), epi.flatten()
+        (ypred, epi) = self.GP.predict_noiseless(x)
+        return ypred, epi
 
     def predict_mean(self, x):
         """ Predicts mean outputs of the NN model for the given input x
@@ -126,3 +126,6 @@ class GPmodel:
 
         self.GP = GPy.models.GPRegression(self.Xtr,self.Ytr, self.kernel)
 
+    def epi_accuracy(self,xte,yte):
+        ypred, epi = self.predict(xte)
+        return (((ypred-yte)**2)*(1-epi)).mean()*epi.mean()

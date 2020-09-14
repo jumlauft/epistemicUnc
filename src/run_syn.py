@@ -5,18 +5,17 @@ import gpmodel
 import bnn
 import matplotlib.pyplot as plt
 
-
 print('Read data...')
-name = "synthetic_data_1D"
+# name = "synthetic_data_1D"
 name = "synthetic_data_2D_square"
 # name = "synthetic_data_2D_gaussian"
-name = "sarcos"
+# name = "sarcos"
 
 train_data = np.genfromtxt('data/'+name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('data/'+name+'_test.csv', delimiter=',')
 
 Ntr = 1000
-xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
 
@@ -26,10 +25,10 @@ dy = ytr.shape[1]
 
 # Model setup
 models = []
-# models.append(bnn.BayesianNeuralNetwork(dx,dy))
-#models.append(gpmodel.GPmodel(dx,dy))
+ #models.append(bnn.BayesianNeuralNetwork(dx,dy))
+# models.append(gpmodel.GPmodel(dx,dy))
 models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
-#models.append(dropout.Dropout(dx,dy))
+models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
@@ -40,7 +39,7 @@ for model in models:
     model.train()
     
     # Evaluation
-    
+    print('Epistemic-weighted RMSE: ' + str(model.weighted_RMSE(xte,yte)))
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
@@ -51,6 +50,7 @@ for model in models:
         ax.set_title('Model Prediction')
         ax.plot(xtr, ytr, 'o', color="blue", label='training')
         ax.plot(xte, modelte, color="red", label='model')
+        ax.plot(xte, yte, color="orange", label='test')
         ax.legend()
 
         ax = modelfig.add_subplot(122)
@@ -69,6 +69,7 @@ for model in models:
         ax.set_title('Model Prediction')
         ax.scatter(xtr[:, 0], xtr[:, 1], ytr, color="blue", label='training')
         ax.scatter(xte[:, 0], xte[:, 1], modelte, color="red", label='model')
+        ax.scatter(xte[:, 0], xte[:, 1], yte[:,0], color="orange", label='test')
         ax.legend()
 
         ax = modelfig.add_subplot(122, projection='3d')
@@ -82,8 +83,6 @@ for model in models:
     elif dx == 21:
         modelte, epi = model.predict(xte)
         RMSE = np.sqrt(np.sum((modelte - yte)**2,axis=1)).mean()
-
-
 
 
 

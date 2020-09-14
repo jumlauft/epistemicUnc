@@ -450,8 +450,11 @@ class BayesianNeuralNetwork:
         y_test_epist = self.execute_epistemic(x)
         epi = y_test_epist.mean(axis = 0).std(axis = 0)
         mean = self.execute(x).mean(axis=0)
-        return mean.flatten(), epi.flatten()
-
+        return mean, epi
+    def epi_accuracy(self,xte,yte):
+        ypred, epi = self.predict(xte)
+        iepi = 1/epi
+        return (iepi*((ypred-yte)**2)).mean()/iepi.mean()
     def reparameterize(self, pars):
         self.w_m = pars[0]
         self.w_v_log = pars[1]
