@@ -6,16 +6,17 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler
 import math
 from utils import scale_to_unit, weighted_RMSE
+
+
 class NegSEp:
-    TRAIN_EPOCHS = 5
-    TRAIN_ITER = 3
+    TRAIN_EPOCHS = 2
+    TRAIN_ITER = 2
     N_HIDDEN = 50
     LEARNING_RATE = 0.01
     MOMENTUM = 0.0001
-    RADIUS_EPI = 1
-    N_EPI = 2
 
-    def __init__(self, dx, dy, input_lb, input_up):
+
+    def __init__(self, dx, dy, r_epi, n_epi):
         """ Online disturbance model to differentiate types of uncertainties
 
         Args:
@@ -27,8 +28,6 @@ class NegSEp:
         Attributes:
             DX (int): input dimension
             DY (int): output dimension
-            INPUT_LB (list): length of DX list of minimal inputs
-            INPUT_UB (list): length of DX list of maximal outputs
             x_epi (numpy array): input locations where no data is available
             y_epi (numpy array): output indicating high/low uncertainty
             _scaler (sklearn scaler): scaler for data
@@ -50,8 +49,8 @@ class NegSEp:
         """
         self.DX = dx
         self.DY = dy
-        self.INPUT_LB = input_lb
-        self.INPUT_UB = input_up
+        self.RADIUS_EPI = r_epi
+        self.N_EPI = n_epi
         self._scaler = StandardScaler()
         self._train_counter = 0
         self.loss = []
@@ -242,6 +241,12 @@ class NegSEp:
         y_epi[idx[:ntr], :] = 0
         x_epi[idx[:ntr], :] = self.Xtr
         return x_epi, y_epi
+
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
         return weighted_RMSE(yte,ypred, epi)
+
+    def compare(self,xte,model):
+        _, epi = self.predict(xte)
+        _, epi_ref = model.predict(xte)
+        return np.sqrt(((epi - epi_ref) ** 2).mean())

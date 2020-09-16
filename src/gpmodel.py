@@ -40,7 +40,7 @@ class GPmodel:
         self.DX = dx
         self.DY = dy
         self.kernel = GPy.kern.RBF(input_dim=self.DX, ARD=True,
-                              lengthscale=0.1)
+                              lengthscale=0.5)
         self.GP = None
 
     def _generate_rand_epi(self, n):
@@ -68,7 +68,7 @@ class GPmodel:
         epistemic uncertainty output
 
         """
-        self.GP.optimize(messages=True)
+        # self.GP.optimize(messages=True)
 
     def predict(self, x):
         """ Predicts outputs of the NN model for the given input x
@@ -106,3 +106,9 @@ class GPmodel:
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
         return weighted_RMSE(yte,ypred, epi)
+
+
+    def compare(self,xte,model):
+        _, epi = self.predict(xte)
+        _, epi_ref = model.predict(xte)
+        return np.sqrt(((epi - epi_ref) ** 2).mean())
