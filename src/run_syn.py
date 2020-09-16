@@ -5,7 +5,7 @@ import gpmodel
 import bnn
 import matplotlib.pyplot as plt
 from tabulate import tabulate
-
+from time import time
 np.random.seed(1)
 
 # git data_name = "synthetic_data_1D"
@@ -17,7 +17,7 @@ print('Read data' + data_name + '...')
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 2000
+Ntr = 44000
 xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
@@ -29,8 +29,8 @@ dy = ytr.shape[1]
 # Model setup
 models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
-models.append(gpmodel.GPmodel(dx,dy))
-# models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
+# models.append(gpmodel.GPmodel(dx,dy))
+models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
 models.append(dropout.Dropout(dx,dy))
 
 for model in models:
@@ -38,12 +38,17 @@ for model in models:
     results.append([model_name])
     print('Processing '+ model_name + ':')
     print('Adding Data...')
+    tstart = time()
     model.add_data(xtr,ytr)
     print('Training...')
     model.train()
-    
+    ttrain = time() - tstart
     # Evaluation
-    results[-1].extend(model.weighted_RMSE(xte,yte))
+    result = model.weighted_RMSE(xte,yte)
+    tevaluate = time() - ttrain
+    results[-1].extend(result)
+    results[-1].extend((ttrain, tevaluate))
+
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
@@ -88,9 +93,10 @@ for model in models:
         modelte, epi = model.predict(xte)
         RMSE = np.sqrt(np.sum((modelte - yte)**2,axis=1)).mean()
 
-
-print(tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'total RMSE']))
-
+tab = tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'mean discount', 't training','time prediction'])
+print(tab)
+with open('results.txt', 'w') as f:
+    print(tab, file=f) 
 
 print('Pau')
 

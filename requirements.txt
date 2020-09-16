@@ -6,3 +6,4 @@ scikit-learn~=0.22.1
 scipy~=1.4.1
 gpy~=1.9.9
 matplotlib~=3.2.1
+tabulate~=0.8.7
