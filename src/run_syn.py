@@ -8,7 +8,9 @@ from tabulate import tabulate
 from time import time
 np.random.seed(1)
 
+
 # data_name = "synthetic_data_1D"
+# data_name = "synthetic_data_1D_split"
 # data_name = "synthetic_data_2D_square"
 # data_name = "synthetic_data_2D_gaussian"
 data_name = "sarcos"
@@ -17,9 +19,9 @@ print('Read data' + data_name + '...')
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-# Ntr = 10000
-# xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
-xtr, ytr = train_data[:,:-1], train_data[:,-1:]
+Ntr = 100
+xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+# xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
@@ -41,17 +43,20 @@ for model in models:
     results.append([model_name])
     print('Processing '+ model_name + ':')
     print('Adding Data...')
-    tstart = time()
+    t0= time()
     model.add_data(xtr,ytr)
     print('Training...')
     model.train()
-    ttrain = time() - tstart
+    ttrain = time() - t0
     # Evaluation
+    t0 = time()
     result = model.weighted_RMSE(xte,yte)
-    tevaluate = time() - tstart - ttrain
+    tevaluate = time() - t0
+    
     results[-1].extend(result)
-    results[-1].extend((ttrain, tevaluate))
-    results[-1].extend([model.compare(xte,models[0])])
+    results[-1]['ttrain'] = ttrain
+    results[-1]['tevaluate'] = tevaluate
+
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
@@ -94,7 +99,7 @@ for model in models:
             pass
 
 
-tab = tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'mean discount', 't training','time prediction','EPI RMSE to ref'])
+tab = tabulate([a.values() for a in results], headers=results[0].keys())
 print(tab)
 with open(data_name + '_results.txt', 'w') as f:
     print(tab, file=f) 

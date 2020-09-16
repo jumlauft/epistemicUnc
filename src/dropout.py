@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, InputLayer, Activation
-from utils import weighted_RMSE
+from utils import Epi_RMSE
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -56,11 +56,10 @@ class Dropout:
 
         history = self.model.fit(self.Xtr, self.Ytr, epochs=self.TRAIN_EPOCHS,
                                  verbose=1) #batch_size = self.BATCH_SIZE, 
+
         return history.history['loss']
 
     def predict(self,x):
-        def sigmoid(x):
-            return 2 / (1 + np.exp(-0.1*x)) -1
         Nte = x.shape[0]
         Yte = self.model.predict(np.tile(x,(self.N_SAMPLES,1))).reshape(self.N_SAMPLES, Nte, self.DY)
         Yte_std = Yte.std(axis = 0)
@@ -84,7 +83,7 @@ class Dropout:
 
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
-        return weighted_RMSE(yte,ypred, epi)
+        return Epi_RMSE(yte,ypred, epi)
 
     def compare(self,xte,model):
         _, epi = self.predict(xte)

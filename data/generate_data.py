@@ -11,6 +11,30 @@ f = lambda x: np.sin(np.pi * x)
 fnametr = name+'_train.csv'
 if not os.path.exists(fnametr):
     ndtr = 100
+    xtr = 2*np.random.rand(ndtr, 1) - 1
+    ytr = f(xtr)
+    np.savetxt(fnametr, np.concatenate((xtr, ytr), axis=1), delimiter=',')
+    print('Generated Data ' + fnametr)
+else:
+    print('Data existed ' + fnametr)
+
+fnamete = name+'_test.csv'
+if not os.path.exists(fnamete):
+    nte = 200
+    xte = np.linspace(-4, 4, nte).reshape(-1, 1)
+    yte = f(xte)
+    np.savetxt(fnamete, np.concatenate((xte, yte), axis=1), delimiter=',')
+    print('Generated Data ' + fnamete)
+else:
+    print('Data existed ' + fnamete)
+
+
+# 1D
+name = "synthetic_data_1D_split"
+f = lambda x: np.sin(np.pi * x)
+fnametr = name+'_train.csv'
+if not os.path.exists(fnametr):
+    ndtr = 100
     xtr = np.concatenate((np.random.rand(ndtr, 1) - 2,
                           np.random.rand(ndtr, 1) + 1))
     ytr = f(xtr)
@@ -28,6 +52,7 @@ if not os.path.exists(fnamete):
     print('Generated Data ' + fnamete)
 else:
     print('Data existed ' + fnamete)
+
 
 # 2D Gaussian
 name = "synthetic_data_2D_gaussian"
