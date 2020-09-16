@@ -1,6 +1,6 @@
 import numpy as np
 import GPy
-from utils import weighted_RMSE
+from utils import Epi_RMSE
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -88,8 +88,7 @@ class GPmodel:
 
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
-        return weighted_RMSE(yte,ypred, epi)
-
+        return Epi_RMSE(yte,ypred, epi)
 
     def compare(self,xte,model):
         _, epi = self.predict(xte)

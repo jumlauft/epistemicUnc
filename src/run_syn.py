@@ -9,6 +9,7 @@ from tabulate import tabulate
 np.random.seed(1)
 
 data_name = "synthetic_data_1D"
+# data_name = "synthetic_data_1D_split"
 # data_name = "synthetic_data_2D_square"
 # data_name = "synthetic_data_2D_gaussian"
 # data_name = "sarcos"
@@ -17,8 +18,9 @@ print('Read data' + data_name + '...')
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 2000
-xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+# Ntr = 2000
+# xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
 
@@ -30,8 +32,8 @@ dy = ytr.shape[1]
 models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
 # models.append(gpmodel.GPmodel(dx,dy))
-models.append(negsep.NegSEp(dx,dy,0.5,2))
-# models.append(dropout.Dropout(dx,dy))
+models.append(negsep.NegSEp(dx,dy,1,2))
+models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
@@ -43,8 +45,9 @@ for model in models:
     model.train()
     
     # Evaluation
-    results[-1].extend(model.weighted_RMSE(xte,yte))
-    results[-1].extend([model.compare(xte,models[0])])
+    results[-1] = model.weighted_RMSE(xte,yte)
+
+    # results[-1].extend([model.compare(xte,models[0])])
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
@@ -90,8 +93,7 @@ for model in models:
         RMSE = np.sqrt(np.sum((modelte - yte)**2,axis=1)).mean()
 
 
-print(tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'total RMSE','EPI RMSE to ref']))
-
+print(tabulate([a.values() for a in results], headers=results[0].keys()))
 
 print('Pau')
 

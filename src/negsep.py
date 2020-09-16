@@ -5,15 +5,14 @@ from tensorflow.keras.layers import Dense, Input
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import math
-from utils import weighted_RMSE
+from utils import Epi_RMSE
 
 
 class NegSEp:
     TRAIN_EPOCHS = 10
     TRAIN_ITER = 5
     N_HIDDEN = 50
-    LEARNING_RATE = 0.001
-    MOMENTUM = 0.0001
+    LEARNING_RATE = 0.01
 
 
     def __init__(self, dx, dy, r_epi, n_epi):
@@ -239,13 +238,16 @@ class NegSEp:
         y_epi[idx[:ntr], :] = 0
         x_epi[idx[:ntr], :] = self.Xtra
         return x_epi, y_epi
+
     def get_x_epi(self):
         return self._scaler.inverse_transform(self.x_epi)
+
     def get_y_epi(self):
         return self.y_epi
+
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
-        return weighted_RMSE(yte,ypred, epi)
+        return Epi_RMSE(yte,ypred, epi)
 
     def compare(self,xte,model):
         _, epi = self.predict(xte)
