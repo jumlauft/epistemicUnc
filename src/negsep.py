@@ -9,10 +9,10 @@ from utils import weighted_RMSE
 
 
 class NegSEp:
-    TRAIN_EPOCHS = 5
+    TRAIN_EPOCHS = 10
     TRAIN_ITER = 5
     N_HIDDEN = 50
-    LEARNING_RATE = 0.01
+    LEARNING_RATE = 0.001
     MOMENTUM = 0.0001
 
 
@@ -178,7 +178,7 @@ class NegSEp:
             from scipy.spatial.distance import cdist
 
             print('Sampling EPI points on CPU')
-            cov_mat = 0.2 * np.eye(self.DX)
+            cov_mat = cov * np.eye(self.DX)
             x_epilist = []
             distance = []
             for x in self.Xtra:

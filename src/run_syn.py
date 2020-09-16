@@ -30,7 +30,7 @@ dy = ytr.shape[1]
 models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
 # models.append(gpmodel.GPmodel(dx,dy))
-models.append(negsep.NegSEp(dx,dy,10,2))
+models.append(negsep.NegSEp(dx,dy,0.5,2))
 # models.append(dropout.Dropout(dx,dy))
 
 for model in models:
