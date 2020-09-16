@@ -1,6 +1,6 @@
 import numpy as np
 import GPy
-from utils import scale_to_unit, weighted_RMSE
+from utils import weighted_RMSE
 
 
 class GPmodel:
@@ -68,6 +68,8 @@ class GPmodel:
         epistemic uncertainty output
 
         """
+        self.GP = GPy.models.GPRegression(self.Xtr,self.Ytr, self.kernel)
+
         # self.GP.optimize(messages=True)
 
     def predict(self, x):
@@ -101,7 +103,6 @@ class GPmodel:
             self.Xtr = np.concatenate((self.Xtr, xtr), axis=0)
             self.Ytr = np.concatenate((self.Ytr, ytr), axis=0)
 
-        self.GP = GPy.models.GPRegression(self.Xtr,self.Ytr, self.kernel)
 
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)

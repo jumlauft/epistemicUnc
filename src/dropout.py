@@ -3,7 +3,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, InputLayer, Activation
-from utils import scale_to_unit, weighted_RMSE
+from utils import weighted_RMSE
+from sklearn.preprocessing import MinMaxScaler
+
 
 class PermaDropout(tf.keras.layers.Layer):
     """Always-on dropout layer, i.e. it does not respect the training flag set to
@@ -27,12 +29,10 @@ class PermaDropout(tf.keras.layers.Layer):
 
 class Dropout:
     N_HIDDEN = 50
-    TRAIN_EPOCHS = 50
+    TRAIN_EPOCHS = 15
     LEARNING_RATE = 0.01
-    MOMENTUM = 0.0001
     N_SAMPLES = 1000
     DROPOUT_RATE = 0.05
-    BATCH_SIZE = 10
     def __init__(self, dx, dy):
         self.DX = dx
         self.DY = dy
@@ -55,7 +55,7 @@ class Dropout:
     def train(self):
 
         history = self.model.fit(self.Xtr, self.Ytr, epochs=self.TRAIN_EPOCHS,
-                                 batch_size = self.BATCH_SIZE, verbose=1)
+                                 verbose=1) #batch_size = self.BATCH_SIZE, 
         return history.history['loss']
 
     def predict(self,x):
@@ -65,7 +65,7 @@ class Dropout:
         Yte = self.model.predict(np.tile(x,(self.N_SAMPLES,1))).reshape(self.N_SAMPLES, Nte, self.DY)
         Yte_std = Yte.std(axis = 0)
         Yte_mean = Yte.mean(axis = 0)
-        return Yte_mean, scale_to_unit(Yte_std)
+        return Yte_mean, MinMaxScaler().fit_transform(Yte_std)
 
     def add_data(self, xtr, ytr):
         """ Adds new training data points to the  model

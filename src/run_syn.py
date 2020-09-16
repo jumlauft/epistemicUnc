@@ -17,22 +17,23 @@ print('Read data' + data_name + '...')
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 4400
-xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+# Ntr = 10000
+# xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+xtr, ytr = train_data[:,:-1], train_data[:,-1:]
+
 xte, yte = test_data[:,:-1], test_data[:,-1:]
 
 
 ntr,dx = xtr.shape
 dy = ytr.shape[1]
 
+print('Read ' + str(ntr) + ' datapoints with ' + str(dx) + ' dimensions')
 
 # Model setup
 models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
 # models.append(gpmodel.GPmodel(dx,dy))
-models.append(gpmodel.GPmodel(dx,dy))
 models.append(negsep.NegSEp(dx,dy,1,2))
-models.append(negsep.NegSEp(dx,dy,10,2))
 models.append(dropout.Dropout(dx,dy))
 
 for model in models:
@@ -67,9 +68,9 @@ for model in models:
         ax = modelfig.add_subplot(122)
         ax.set_title('Epistemic Uncertainty')
         plt.plot(xte, epi, color="blue")
-        plt.plot(xtr, np.zeros(ntr),'o', color="red")
+        plt.plot(xtr, np.zeros(ntr),'x', color="red")
         try:
-            plt.plot(model.x_epi[:, 0], model.y_epi, 'o', color="green")
+            plt.plot(model.get_x_epi()[:, 0], model.get_y_epi(), 'o', color="green")
         except AttributeError:
             pass
         plt.show()
@@ -88,14 +89,14 @@ for model in models:
         ax.scatter(xte[:, 0], xte[:, 1], epi, color="blue")
         ax.scatter(xtr[:, 0], xtr[:, 1], np.zeros(ntr), color="red")
         try:
-            ax.scatter(model.x_epi[:, 0], model.x_epi[:, 1], model.y_epi, color="green")
+            ax.scatter(model.get_x_epi()[:, 0], model.get_x_epi()[:, 1], model.y_epi, color="green")
         except AttributeError:
             pass
 
 
 tab = tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'mean discount', 't training','time prediction','EPI RMSE to ref'])
 print(tab)
-with open('results.txt', 'w') as f:
+with open(data_name + '_results.txt', 'w') as f:
     print(tab, file=f) 
 
 print('Pau')
