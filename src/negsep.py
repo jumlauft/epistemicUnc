@@ -3,14 +3,14 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import math
-from utils import scale_to_unit, weighted_RMSE
+from utils import weighted_RMSE
 
 
 class NegSEp:
     TRAIN_EPOCHS = 5
-    TRAIN_ITER = 3
+    TRAIN_ITER = 5
     N_HIDDEN = 50
     LEARNING_RATE = 0.01
     MOMENTUM = 0.0001
@@ -100,23 +100,20 @@ class NegSEp:
         epistemic uncertainty output
 
         """
-        self._scaler.fit(self.x_epi)
 
         cw = compute_class_weight('balanced', np.unique(self.y_epi),
                                   self.y_epi.flatten())
-        xepis = self._scaler.fit_transform(self.x_epi)
-        xtrs = self._scaler.transform(self.Xtr)
         for i in range(self.TRAIN_ITER):
             # hist = self.model_out.fit(self.Xtr, self.Ytr, **kwargs)
-            hist_epi = self.model_epi.fit(xepis, self.y_epi, class_weight=cw,
+            hist_epi = self.model_epi.fit(self.x_epi, self.y_epi, class_weight=cw,
                                           epochs=self.TRAIN_EPOCHS, verbose=1)
-            hist = self.model_mean.fit(xtrs, self.Ytr,
+            hist = self.model_mean.fit(self.Xtra, self.Ytr,
                                        epochs=self.TRAIN_EPOCHS, verbose=0)
 
-            if np.isnan(hist_epi.history['loss']).any():
-                print('detected Nan')
-            self.loss = self.loss + hist.history['loss'] + hist_epi.history[
-                'loss']
+            # if np.isnan(hist_epi.history['loss']).any():
+            #     print('detected Nan')
+            # self.loss = self.loss + hist.history['loss'] + hist_epi.history[
+            #     'loss']
         return self.loss
 
     def predict(self, x):
@@ -129,7 +126,7 @@ class NegSEp:
             mean, aleatoric uncertainty, epistemic uncertainty
         """
         ypred, epi = self.model_all.predict(self._scaler.transform(x))
-        return ypred, scale_to_unit(epi)
+        return ypred, MinMaxScaler().fit_transform(epi)
 
 
     def add_data(self, xtr, ytr):
@@ -151,17 +148,18 @@ class NegSEp:
             self.Xtr = np.concatenate((self.Xtr, xtr), axis=0)
             self.Ytr = np.concatenate((self.Ytr, ytr), axis=0)
 
+        self.Xtra = self._scaler.fit_transform(self.Xtr)
         self.x_epi, self.y_epi = self._generate_xy_epi()
 
     def _generate_xy_epi(self):
         """ Generates artificial data points for epistemic uncertainty estimate
 
         """
-        ntr = self.Xtr.shape[0]
+        ntr = self.Xtra.shape[0]
 
         # ALTERNATIVE 1
         # distance = np.sum((self.x_epi.reshape(1,-1,self.DX)
-        #               - self.Xtr.reshape(ntr,1,self.DX))**2, axis=2)
+        #               - self.Xtra.reshape(ntr,1,self.DX))**2, axis=2)
         # dis1fill = distance.min(axis = 0).reshape(-1,1)
         # RADIUS_TR = 0.0001
         # self.y_epi = (dis1fill > RADIUS_TR).astype(int)
@@ -183,10 +181,10 @@ class NegSEp:
             cov_mat = 0.2 * np.eye(self.DX)
             x_epilist = []
             distance = []
-            for x in self.Xtr:
+            for x in self.Xtra:
                 xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
                 x_epilist.append(xepi)
-                distance.extend(cdist(xepi,self.Xtr).min(axis=1))
+                distance.extend(cdist(xepi,self.Xtra).min(axis=1))
             x_epi = np.concatenate(x_epilist, axis=0)
             d = np.array(distance)
         else:
@@ -194,7 +192,7 @@ class NegSEp:
             from numba.cuda.random import create_xoroshiro128p_states, \
                 xoroshiro128p_normal_float32
             print('Sampling EPI points on GPU')
-            Xtr = np.ascontiguousarray(self.Xtr, dtype = np.float32)
+            Xtr = np.ascontiguousarray(self.Xtra, dtype = np.float32)
             # cuda.select_device(2)
             @cuda.jit
             def generate_rand(rng_states, Xtr, cov, Xepi, d):
@@ -231,7 +229,7 @@ class NegSEp:
         idx = np.argpartition(d.reshape(-1), ntr)
 
         # find closest uncertain points
-        # d = x_epi.reshape(1, -1, self.DX) - self.Xtr.reshape(-1, 1, self.DX)
+        # d = x_epi.reshape(1, -1, self.DX) - self.Xtra.reshape(-1, 1, self.DX)
         # distance = np.sum(d ** 2, axis=2)
         # idx = np.argpartition(distance.min(axis=0), ntr)
 
@@ -239,9 +237,12 @@ class NegSEp:
 
         # replace by training data input and turn into certain points
         y_epi[idx[:ntr], :] = 0
-        x_epi[idx[:ntr], :] = self.Xtr
+        x_epi[idx[:ntr], :] = self.Xtra
         return x_epi, y_epi
-
+    def get_x_epi(self):
+        return self._scaler.inverse_transform(self.x_epi)
+    def get_y_epi(self):
+        return self.y_epi
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
         return weighted_RMSE(yte,ypred, epi)

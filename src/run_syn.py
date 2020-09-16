@@ -29,10 +29,9 @@ dy = ytr.shape[1]
 # Model setup
 models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
-models.append(gpmodel.GPmodel(dx,dy))
-models.append(negsep.NegSEp(dx,dy,1,2))
+# models.append(gpmodel.GPmodel(dx,dy))
 models.append(negsep.NegSEp(dx,dy,10,2))
-models.append(dropout.Dropout(dx,dy))
+# models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
@@ -62,9 +61,9 @@ for model in models:
         ax = modelfig.add_subplot(122)
         ax.set_title('Epistemic Uncertainty')
         plt.plot(xte, epi, color="blue")
-        plt.plot(xtr, np.zeros(ntr),'o', color="red")
+        plt.plot(xtr, np.zeros(ntr),'x', color="red")
         try:
-            plt.plot(model.x_epi[:, 0], model.y_epi, 'o', color="green")
+            plt.plot(model.get_x_epi()[:, 0], model.get_y_epi(), 'o', color="green")
         except AttributeError:
             pass
         plt.show()
@@ -83,7 +82,7 @@ for model in models:
         ax.scatter(xte[:, 0], xte[:, 1], epi, color="blue")
         ax.scatter(xtr[:, 0], xtr[:, 1], np.zeros(ntr), color="red")
         try:
-            ax.scatter(model.x_epi[:, 0], model.x_epi[:, 1], model.y_epi, color="green")
+            ax.scatter(model.get_x_epi()[:, 0], model.get_x_epi()[:, 1], model.y_epi, color="green")
         except AttributeError:
             pass
     elif dx == 21:

@@ -1,6 +1,7 @@
 import numpy as np
 import GPy
-from utils import scale_to_unit, weighted_RMSE
+from utils import weighted_RMSE
+from sklearn.preprocessing import MinMaxScaler
 
 
 class GPmodel:
@@ -43,24 +44,6 @@ class GPmodel:
                               lengthscale=0.5)
         self.GP = None
 
-    def _generate_rand_epi(self, n):
-        """ Generates random input locations for epistemic uncertainty measure
-
-        Uniformly distributes data points across the input space defined by
-        INPUT_LB and INPUT_UB
-
-
-        Args:
-            n (int): Number of points to be generated
-
-        Returns:
-            [n, DX] numpy array
-
-        """
-        lim = np.array([self.INPUT_LB, self.INPUT_UB])
-        return (lim[1, :] - lim[0, :]) * np.random.rand(n, self.DX) + lim[0, :]
-
-
     def train(self):
         """ Trains the neural network based on the current data
 
@@ -80,7 +63,7 @@ class GPmodel:
             mean, aleatoric uncertainty, epistemic uncertainty
         """
         (ypred, epi) = self.GP.predict_noiseless(x)
-        return ypred, scale_to_unit(epi)
+        return ypred, MinMaxScaler().fit_transform(epi)
 
 
     def add_data(self, xtr, ytr):
