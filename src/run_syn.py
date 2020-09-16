@@ -8,10 +8,10 @@ from tabulate import tabulate
 
 np.random.seed(1)
 
-# git data_name = "synthetic_data_1D"
+data_name = "synthetic_data_1D"
 # data_name = "synthetic_data_2D_square"
 # data_name = "synthetic_data_2D_gaussian"
-data_name = "sarcos"
+# data_name = "sarcos"
 print('Read data' + data_name + '...')
 
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
@@ -30,7 +30,8 @@ dy = ytr.shape[1]
 models, results = [],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
 models.append(gpmodel.GPmodel(dx,dy))
-# models.append(negsep.NegSEp(dx,dy,[-0.5, -0.5],[1.5, 1.5]))
+models.append(negsep.NegSEp(dx,dy,1,2))
+models.append(negsep.NegSEp(dx,dy,10,2))
 models.append(dropout.Dropout(dx,dy))
 
 for model in models:
@@ -44,6 +45,7 @@ for model in models:
     
     # Evaluation
     results[-1].extend(model.weighted_RMSE(xte,yte))
+    results[-1].extend([model.compare(xte,models[0])])
 
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
@@ -60,7 +62,7 @@ for model in models:
         ax = modelfig.add_subplot(122)
         ax.set_title('Epistemic Uncertainty')
         plt.plot(xte, epi, color="blue")
-        plt.plot(xtr, np.zeros(ntr), color="red")
+        plt.plot(xtr, np.zeros(ntr),'o', color="red")
         try:
             plt.plot(model.x_epi[:, 0], model.y_epi, 'o', color="green")
         except AttributeError:
@@ -89,7 +91,7 @@ for model in models:
         RMSE = np.sqrt(np.sum((modelte - yte)**2,axis=1)).mean()
 
 
-print(tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'total RMSE']))
+print(tabulate(results, headers=['weighted RMSE', 'RMSE', 'discounted RMSE', 'total RMSE','EPI RMSE to ref']))
 
 
 print('Pau')

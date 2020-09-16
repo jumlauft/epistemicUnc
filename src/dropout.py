@@ -85,3 +85,8 @@ class Dropout:
     def weighted_RMSE(self,xte,yte):
         ypred, epi = self.predict(xte)
         return weighted_RMSE(yte,ypred, epi)
+
+    def compare(self,xte,model):
+        _, epi = self.predict(xte)
+        _, epi_ref = model.predict(xte)
+        return np.sqrt(((epi - epi_ref) ** 2).mean())
