@@ -6,6 +6,8 @@ import bnn
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 from time import time
+import pickle 
+
 np.random.seed(1)
 
 
@@ -19,15 +21,22 @@ print('Read data' + data_name + '...')
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 100
+Ntr = 5000
 xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
 # xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 
-xte, yte = test_data[:,:-1], test_data[:,-1:]
-
-
 ntr,dx = xtr.shape
 dy = ytr.shape[1]
+
+nte = test_data.shape[0]
+idx = np.random.choice(ntr,nte, replace=False)
+xte = np.concatenate((train_data[idx,:-1],test_data[:,:-1]), axis=0)
+yte = np.concatenate((train_data[idx,-1:],test_data[:,-1:]), axis=0)
+nte = xte.shape[0]
+# xte, yte = test_data[:,:-1], test_data[:,-1:]
+
+
+
 
 print('Read ' + str(ntr) + ' datapoints with ' + str(dx) + ' dimensions')
 
@@ -49,11 +58,12 @@ for model in models:
     model.train()
     ttrain = time() - t0
     # Evaluation
+    print('Evaluating on ' + str(nte) + ' data points...')
     t0 = time()
     result = model.weighted_RMSE(xte,yte)
     tevaluate = time() - t0
     
-    results[-1].extend(result)
+    results[-1] = result
     results[-1]['ttrain'] = ttrain
     results[-1]['tevaluate'] = tevaluate
 

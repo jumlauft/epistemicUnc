@@ -193,7 +193,7 @@ class NegSEp:
                 xoroshiro128p_normal_float32
             print('Sampling EPI points on GPU')
             Xtr = np.ascontiguousarray(self.Xtra, dtype = np.float32)
-            # cuda.select_device(2)
+            cuda.select_device(1)
             @cuda.jit
             def generate_rand(rng_states, Xtr, cov, Xepi, d):
                 thread_id = cuda.grid(1)
