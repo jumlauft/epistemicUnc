@@ -6,14 +6,15 @@ import bnn
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 from time import time
+import pickle
 np.random.seed(1)
 
 
-# data_name = "synthetic_data_1D"
+data_name = "synthetic_data_1D"
 # data_name = "synthetic_data_1D_split"
 # data_name = "synthetic_data_2D_square"
 # data_name = "synthetic_data_2D_gaussian"
-data_name = "sarcos"
+# data_name = "sarcos"
 print('Read data' + data_name + '...')
 
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
@@ -53,11 +54,12 @@ for model in models:
     result = model.weighted_RMSE(xte,yte)
     tevaluate = time() - t0
     
-    results[-1].extend(result)
+    results[-1] = result
     results[-1]['ttrain'] = ttrain
     results[-1]['tevaluate'] = tevaluate
 
-
+    model_file = open(data_name + model_name, 'w')
+    pickle.dump(model, model_file)
     # Visualization
     modelfig = plt.figure(figsize=(10, 5))
     modelfig.suptitle(model.__class__.__name__)
