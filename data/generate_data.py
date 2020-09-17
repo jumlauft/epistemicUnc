@@ -123,7 +123,7 @@ filename = "sarcos_train.csv"
 if not os.path.exists(filename):
     urllib.request.urlretrieve("http://www.gaussianprocess.org/gpml/data/sarcos_inv.mat", "sarcos_inv.mat")
     train_data = loadmat('sarcos_inv.mat')['sarcos_inv'].astype(np.float32)
-    np.savetxt(filename, train_data, delimiter=',')
+    np.savetxt(filename, train_data[:,:22], delimiter=',')
     os.remove("sarcos_inv.mat")
     print('Generated Data ' + filename)
 else:
@@ -134,7 +134,7 @@ if not os.path.exists(filename):
     matfile = "sarcos_inv_test.mat"
     urllib.request.urlretrieve("http://www.gaussianprocess.org/gpml/data/sarcos_inv_test.mat", matfile)
     train_data = loadmat(matfile)['sarcos_inv_test'].astype(np.float32)
-    np.savetxt(filename, train_data, delimiter=',')
+    np.savetxt(filename, train_data[:,:22], delimiter=',')
     os.remove(matfile)
     print('Generated Data ' + filename)
 else:

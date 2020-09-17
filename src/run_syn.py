@@ -6,29 +6,35 @@ import bnn
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 from time import time
-import pickle
 np.random.seed(1)
 
 
-data_name = "synthetic_data_1D"
+# data_name = "synthetic_data_1D"
 # data_name = "synthetic_data_1D_split"
 # data_name = "synthetic_data_2D_square"
 # data_name = "synthetic_data_2D_gaussian"
-# data_name = "sarcos"
+data_name = "sarcos"
 print('Read data' + data_name + '...')
 
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 100
+Ntr = 50
 xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
 # xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 
-xte, yte = test_data[:,:-1], test_data[:,-1:]
-
-
 ntr,dx = xtr.shape
 dy = ytr.shape[1]
+
+nte = test_data.shape[0]
+idx = np.random.choice(ntr,min(ntr,nte), replace=False)
+xte = np.concatenate((train_data[idx,:-1],test_data[:,:-1]), axis=0)
+yte = np.concatenate((train_data[idx,-1:],test_data[:,-1:]), axis=0)
+nte = xte.shape[0]
+# xte, yte = test_data[:,:-1], test_data[:,-1:]
+
+
+
 
 print('Read ' + str(ntr) + ' datapoints with ' + str(dx) + ' dimensions')
 
@@ -50,6 +56,7 @@ for model in models:
     model.train()
     ttrain = time() - t0
     # Evaluation
+    print('Evaluating on ' + str(nte) + ' data points...')
     t0 = time()
     result = model.weighted_RMSE(xte,yte)
     tevaluate = time() - t0
@@ -58,12 +65,11 @@ for model in models:
     results[-1]['ttrain'] = ttrain
     results[-1]['tevaluate'] = tevaluate
 
-    model_file = open(data_name + model_name, 'w')
-    pickle.dump(model, model_file)
+
     # Visualization
-    modelfig = plt.figure(figsize=(10, 5))
-    modelfig.suptitle(model.__class__.__name__)
     if dx == 1:
+        modelfig = plt.figure(figsize=(10, 5))
+        modelfig.suptitle(model.__class__.__name__)
         modelte, epi = model.predict(xte)
         ax = modelfig.add_subplot(121)
         ax.set_title('Model Prediction')
@@ -83,6 +89,8 @@ for model in models:
         plt.show()
 
     elif dx == 2:
+        modelfig = plt.figure(figsize=(10, 5))
+        modelfig.suptitle(model.__class__.__name__)
         modelte, epi = model.predict(xte)
         ax = modelfig.add_subplot(121, projection='3d')
         ax.set_title('Model Prediction')
