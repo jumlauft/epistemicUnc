@@ -13,26 +13,29 @@ np.random.seed(1)
 # data_name = "synthetic_data_1D_split"
 # data_name = "synthetic_data_2D_square"
 # data_name = "synthetic_data_2D_gaussian"
-data_name = "sarcos"
+# data_name = "sarcos"
+data_name = "wine_quality"
+data_name = "motor_temperature"
+
 print('Read data' + data_name + '...')
 
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 50
-xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
-# xtr, ytr = train_data[:,:-1], train_data[:,-1:]
+# Ntr = 5000
+# xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 
 ntr,dx = xtr.shape
 dy = ytr.shape[1]
 
-nte = test_data.shape[0]
-idx = np.random.choice(ntr,min(ntr,nte), replace=False)
-xte = np.concatenate((train_data[idx,:-1],test_data[:,:-1]), axis=0)
-yte = np.concatenate((train_data[idx,-1:],test_data[:,-1:]), axis=0)
-nte = xte.shape[0]
-# xte, yte = test_data[:,:-1], test_data[:,-1:]
+# nte = test_data.shape[0]
+# idx = np.random.choice(ntr,min(ntr,nte), replace=False)
+# xte = np.concatenate((train_data[idx,:-1],test_data[:,:-1]), axis=0)
+# yte = np.concatenate((train_data[idx,-1:],test_data[:,-1:]), axis=0)
+xte, yte = test_data[:,:-1], test_data[:,-1:]
 
+nte = xte.shape[0]
 
 
 
