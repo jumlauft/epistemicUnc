@@ -142,3 +142,52 @@ if not os.path.exists(filename):
     print('Generated Data ' + filename)
 else:
     print('Data existed ' + filename)
+
+
+
+# Wine quality
+name = "wine_quality"
+filetr = name + '_train.csv'
+filete = name + '_test.csv'
+infile = 'wine_quality.csv'
+if not os.path.exists(filete) or not os.path.exists(filetr):
+    if os.path.exists(infile):
+        data = np.genfromtxt(infile, delimiter=',',skip_header=1)
+        n = data.shape[0]
+        ntr = int(n*0.8)
+        nte = n-ntr
+        idxtr = np.isin(np.arange(n), np.random.choice(n, ntr, replace=False))
+        idxte = np.invert(idxtr)
+        np.savetxt(filetr, data[idxtr,:], delimiter=',')
+        print('Generated Data ' + filetr)
+        np.savetxt(filete, data[idxte,:], delimiter=',')
+        print('Generated Data ' + filete)
+
+    else:
+        print('please download wine_quality.csv from https://www.kaggle.com/msjaiclub/regression/download')
+else:
+    print('Data existed ' + filetr)
+    print('Data existed ' + filete)
+
+# Motor temperature
+name = "motor_temperature"
+filetr = name + '_train.csv'
+filete = name + '_test.csv'
+infile = 'pmsm_temperature_data.csv'
+if not os.path.exists(filete) or not os.path.exists(filetr):
+    if os.path.exists(infile):
+        data = np.genfromtxt(infile, delimiter=',',skip_header=1, skip_footer=900000)
+        n = data.shape[0]
+        ntr = 50000
+        nte = 5000
+        if ntr + nte > n:
+            print('overlap traininig and test data')
+        np.savetxt(filetr, data[:ntr,:9], delimiter=',')
+        print('Generated Data ' + filetr)
+        np.savetxt(filete, data[-nte:,:9], delimiter=',')
+        print('Generated Data ' + filete)
+    else:
+        print('please download'+infile+'from https://www.kaggle.com/wkirgsn/electric-motor-temperature')
+else:
+    print('Data existed ' + filetr)
+    print('Data existed ' + filete)

@@ -5,25 +5,17 @@ from tensorflow.keras.layers import Dense, Input
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import math
-from utils import Epi_RMSE
+from epimodel import EpiModel
 
-
-class NegSEp:
-
-    TRAIN_EPOCHS = 5
-    TRAIN_ITER = 5
-    N_HIDDEN = 50
-    LEARNING_RATE = 0.01
-
-
-    def __init__(self, dx, dy, r_epi, n_epi):
+class Negsep(EpiModel):
+    def __init__(self, R_EPI = 1, N_EPI = 2, TRAIN_EPOCHS = 10,TRAIN_ITER = 5,
+                N_HIDDEN = 50, LEARNING_RATE = 0.01,**kwargs):
         """ Online disturbance model to differentiate types of uncertainties
 
         Args:
             dx (int): input dimension
             dy (int): output dimension
-            input_lb (list): length of DX list of minimal inputs
-            input_up (list): length of DX list of maximal outputs
+
 
         Attributes:
             DX (int): input dimension
@@ -32,66 +24,41 @@ class NegSEp:
             y_epi (numpy array): output indicating high/low uncertainty
             _scaler (sklearn scaler): scaler for data
             loss (list): loss over training epochs
-            _train_counter (int): counts number of added points until retraining
 
             TRAIN_EPOCHS (int): Number of training epochs per iteration
             TRAIN_ITER (int): Number of training iterations
             N_HIDDEN (int): Number of hidden neurons per layer
             LEARNING_RATE (float): step size of RMSprop optimizer
-            MOMENTUM (float): momentum of RMSprop optimizer
-            SCALE_OFFSET (float): numerical stability for variance predictions
-            MIN_ADD_DATA_RATE (float): lower bounds the acceptance probability for
-                                        incoming data points
             N_EPI (int): number of additional data points stored for epsistemic
-            TRAIN_LIM (int): upper bound for _train_counter (triggers retraining)
 
 
         """
-        self.DX = dx
-        self.DY = dy
-        self.RADIUS_EPI = r_epi
-        self.N_EPI = n_epi
+        super().__init__(**kwargs)
+        self.R_EPI = R_EPI
+        self.N_EPI = N_EPI
+        self.TRAIN_EPOCHS = TRAIN_EPOCHS
+        self.TRAIN_ITER = TRAIN_ITER
         self._scaler = StandardScaler()
-        self._train_counter = 0
-        self.loss = []
-        self.model_epi, self.model_mean, self.model_all = self._setup_nn
 
-    @property
-    def _setup_nn(self):
-        """ Sets up the neural network structure for the disturbance model
-
-        The neural network has three outputs
-        - disturbance estimation
-        - epsistemic uncertainty estimate
-
-        Returns:
-            model_epi: model to epistemic uncertainty prediction
-            model_mean: model to mean output prediction
-            model_all: model to all outputs at once
-
-        """
         tf.random.set_seed(0)
-
         inp = Input(shape=(self.DX,))
-        hidden = Dense(self.N_HIDDEN, activation="relu")(inp)
-        hidden = Dense(self.N_HIDDEN, activation="relu")(hidden)
+        hidden = Dense(N_HIDDEN, activation="relu")(inp)
+        hidden = Dense(N_HIDDEN, activation="relu")(hidden)
 
         meanlay = Dense(self.DY)(hidden)
         epilay = Dense(1, activation='sigmoid')(hidden)
 
-
-        model_epi = Model(inputs=inp, outputs=epilay)
-        model_epi.compile(
-            optimizer=tf.optimizers.RMSprop(learning_rate=self.LEARNING_RATE),
+        self.model_epi = Model(inputs=inp, outputs=epilay)
+        self.model_epi.compile(
+            optimizer=tf.optimizers.RMSprop(learning_rate=LEARNING_RATE),
             loss='binary_crossentropy')
 
-        model_mean = Model(inputs=inp, outputs=meanlay)
-        model_mean.compile(
-            optimizer=tf.optimizers.RMSprop(learning_rate=self.LEARNING_RATE),
+        self.model_mean = Model(inputs=inp, outputs=meanlay)
+        self.model_mean.compile(
+            optimizer=tf.optimizers.RMSprop(learning_rate=LEARNING_RATE),
             loss='mse')
 
-        model_all = Model(inputs=inp, outputs=[meanlay, epilay])
-        return model_epi, model_mean, model_all
+        self.model_all = Model(inputs=inp, outputs=[meanlay, epilay])
 
     def train(self):
         """ Trains the neural network based on the current data
@@ -100,7 +67,6 @@ class NegSEp:
         epistemic uncertainty output
 
         """
-
         cw = compute_class_weight('balanced', np.unique(self.y_epi),
                                   self.y_epi.flatten())
         for i in range(self.TRAIN_ITER):
@@ -109,12 +75,12 @@ class NegSEp:
                                           epochs=self.TRAIN_EPOCHS, verbose=1)
             hist = self.model_mean.fit(self.Xtra, self.Ytr,
                                        epochs=self.TRAIN_EPOCHS, verbose=0)
-
             # if np.isnan(hist_epi.history['loss']).any():
             #     print('detected Nan')
             # self.loss = self.loss + hist.history['loss'] + hist_epi.history[
             #     'loss']
-        return self.loss
+        return hist.history['loss']
+
 
     def predict(self, x):
         """ Predicts outputs of the NN model for the given input x
@@ -171,7 +137,7 @@ class NegSEp:
 
         # ALTERNATIVE 3
         # Generate uncertain points
-        cov = self.RADIUS_EPI
+        cov = self.R_EPI
         Nepi = self.N_EPI * self.DX
         
         if len(tf.config.list_physical_devices('GPU')) == 0:
@@ -245,8 +211,4 @@ class NegSEp:
 
     def get_y_epi(self):
         return self.y_epi
-
-    def weighted_RMSE(self,xte,yte):
-        ypred, epi = self.predict(xte)
-        return Epi_RMSE(yte,ypred, epi)
 

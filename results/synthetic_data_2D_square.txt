@@ -1,0 +1,3 @@
+model_name      ttrain    rmse_test    rmse_discounted_test    total_discount_test    rmse_train    rmse_discounted_train    total_discount_train    tevaluate
+------------  --------  -----------  ----------------------  ---------------------  ------------  -----------------------  ----------------------  -----------
+Dropout       0.547554     0.791818                0.194489               0.363493      0.245255                0.0890909                0.504322      2.33717
