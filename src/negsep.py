@@ -11,7 +11,7 @@ from utils import Epi_RMSE
 class NegSEp:
 
     TRAIN_EPOCHS = 5
-    TRAIN_ITER = 3
+    TRAIN_ITER = 5
     N_HIDDEN = 50
     LEARNING_RATE = 0.01
 
@@ -193,7 +193,7 @@ class NegSEp:
                 xoroshiro128p_normal_float32
             print('Sampling EPI points on GPU')
             Xtr = np.ascontiguousarray(self.Xtra, dtype = np.float32)
-            cuda.select_device(1)
+            # cuda.select_device(1)
             @cuda.jit
             def generate_rand(rng_states, Xtr, cov, Xepi, d):
                 thread_id = cuda.grid(1)
@@ -250,7 +250,3 @@ class NegSEp:
         ypred, epi = self.predict(xte)
         return Epi_RMSE(yte,ypred, epi)
 
-    def compare(self,xte,model):
-        _, epi = self.predict(xte)
-        _, epi_ref = model.predict(xte)
-        return np.sqrt(((epi - epi_ref) ** 2).mean())

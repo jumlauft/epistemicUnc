@@ -29,9 +29,9 @@ class PermaDropout(tf.keras.layers.Layer):
 
 class Dropout:
     N_HIDDEN = 50
-    TRAIN_EPOCHS = 15
+    TRAIN_EPOCHS = 25
     LEARNING_RATE = 0.01
-    N_SAMPLES = 1000
+    N_SAMPLES = 100
     DROPOUT_RATE = 0.05
     def __init__(self, dx, dy):
         self.DX = dx
@@ -54,7 +54,7 @@ class Dropout:
         return model
     def train(self):
 
-        history = self.model.fit(self.Xtr, self.Ytr, epochs=self.TRAIN_EPOCHS,
+        history = self.model.fit(self.Xtr, self.Ytr, epochs=self.TRAIN_EPOCHS, 
                                  verbose=1) #batch_size = self.BATCH_SIZE, 
 
         return history.history['loss']

@@ -19,35 +19,37 @@ print('Read data' + data_name + '...')
 train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
 test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
-Ntr = 50
-xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
-# xtr, ytr = train_data[:,:-1], train_data[:,-1:]
+# Ntr = 20000
+# xtr, ytr = train_data[:Ntr,:-1], train_data[:Ntr,-1:]
+xtr, ytr = train_data[:,:-1], train_data[:,-1:]
 
 ntr,dx = xtr.shape
 dy = ytr.shape[1]
 
-nte = test_data.shape[0]
-idx = np.random.choice(ntr,min(ntr,nte), replace=False)
-xte = np.concatenate((train_data[idx,:-1],test_data[:,:-1]), axis=0)
-yte = np.concatenate((train_data[idx,-1:],test_data[:,-1:]), axis=0)
-nte = xte.shape[0]
-# xte, yte = test_data[:,:-1], test_data[:,-1:]
+# nte = test_data.shape[0]
+# idx = np.random.choice(ntr,min(ntr,nte), replace=False)
+# xte = np.concatenate((train_data[idx,:-1],test_data[:,:-1]), axis=0)
+# yte = np.concatenate((train_data[idx,-1:],test_data[:,-1:]), axis=0)
+xte, yte = test_data[:,:-1], test_data[:,-1:]
 
+nte = xte.shape[0]
 
 
 
 print('Read ' + str(ntr) + ' datapoints with ' + str(dx) + ' dimensions')
 
 # Model setup
-models, results = [],[]
+models, results, resultstr = [],[],[]
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
 # models.append(gpmodel.GPmodel(dx,dy))
-models.append(negsep.NegSEp(dx,dy,1,2))
+models.append(negsep.NegSEp(dx,dy,1,4))
 models.append(dropout.Dropout(dx,dy))
 
 for model in models:
     model_name = model.__class__.__name__
     results.append([model_name])
+    resultstr.append([model_name])
+
     print('Processing '+ model_name + ':')
     print('Adding Data...')
     t0= time()
@@ -61,9 +63,13 @@ for model in models:
     result = model.weighted_RMSE(xte,yte)
     tevaluate = time() - t0
     
+    resulttr = model.weighted_RMSE(xtr,ytr)
+
     results[-1] = result
     results[-1]['ttrain'] = ttrain
     results[-1]['tevaluate'] = tevaluate
+    
+    resultstr[-1] = resulttr
 
 
     # Visualization
@@ -110,10 +116,14 @@ for model in models:
 
 
 tab = tabulate([a.values() for a in results], headers=results[0].keys())
+tabtr = tabulate([a.values() for a in resultstr], headers=resultstr[0].keys())
+
 print(tab)
+print(tabtr)
 with open(data_name + '_results.txt', 'w') as f:
     print(tab, file=f) 
-
+with open(data_name + '_resultstr.txt', 'w') as f:
+    print(tabtr, file=f) 
 print('Pau')
 
 
