@@ -24,14 +24,14 @@ class GPmodel(EpiModel):
         self.GP = None
 
 
-    def train(self):
+    def train(self, xtr, ytr):
         """ Trains the neural network based on the current data
 
         Training iterates between training the disturbance output and the
         epistemic uncertainty output
 
         """
-        self.GP = GPy.models.GPRegression(self.Xtr,self.Ytr, self.kernel)
+        self.GP = GPy.models.GPRegression(xtr, ytr, self.kernel)
 
         self.GP.optimize(messages=True)
 

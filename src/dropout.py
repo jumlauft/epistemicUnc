@@ -47,8 +47,8 @@ class Dropout(EpiModel):
         self.model.compile(optimizer=tf.optimizers.RMSprop(learning_rate = LEARNING_RATE), 
                            loss='mean_squared_error')
 
-    def train(self):
-        history = self.model.fit(self.Xtr, self.Ytr, epochs=self.TRAIN_EPOCHS, verbose=1)
+    def train(self, xtr, ytr):
+        history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS, verbose=1)
         return history.history['loss']
 
     def predict(self,x):

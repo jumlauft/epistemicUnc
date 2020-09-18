@@ -20,6 +20,7 @@ def eval_discounted_rmse(yte, ypredte, epite, ytr, ypredtr, epitr):
 
 
 def visualize(model,xtr, ytr, xte, yte):
+    ntr,dx = xtr.shape
     if dx == 1:
         modelfig = plt.figure(figsize=(10, 5))
         modelfig.suptitle(model.__class__.__name__)

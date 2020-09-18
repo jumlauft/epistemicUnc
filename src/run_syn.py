@@ -11,18 +11,18 @@ np.random.seed(1)
 
 # Add Datasets
 data_sets = []
-# data_sets.append("synthetic_data_1D")
-# data_sets.append("synthetic_data_1D_split")
+data_sets.append("synthetic_data_1D")
+data_sets.append("synthetic_data_1D_split")
 # data_sets.append("synthetic_data_2D_square")
 # data_sets.append("synthetic_data_2D_gaussian")
 # data_sets.append("sarcos")
-data_sets.append("wine_quality")
+# data_sets.append("wine_quality")
 # data_sets.append("motor_temperature")
 
 for data_name in data_sets:
 
+    # Read data
     print('Read data: ' + data_name + '...')
-
     train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
     test_data = np.genfromtxt('../data/'+data_name+'_test.csv', delimiter=',')
 
@@ -49,19 +49,21 @@ for data_name in data_sets:
         results.append({'model_name':model_name})
         print('Processing '+ model_name + ':')
           
-        print('Adding Data...')
-        t0 = time()
-        model.add_data(xtr,ytr)
+        # Training
         print('Training...')
-        model.train()
+        t0 = time()
+        model.train(xtr,ytr)
         results[-1].update({'ttrain':time() - t0})
+        
         # Evaluation
         print('Evaluating...')
         t0 = time()
         results[-1].update(model.evaluate(xte,yte, xtr, ytr))
         results[-1].update({'tevaluate':time() - t0})
+        
         visualize(model,xtr, ytr, xte, yte)
-
+    
+    # Print and save results
     tab = tabulate([a.values() for a in results], headers=results[0].keys())
     print(tab)
     with open('../results/' + data_name + '.txt', 'w') as f:

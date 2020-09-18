@@ -60,28 +60,6 @@ class Negsep(EpiModel):
 
         self.model_all = Model(inputs=inp, outputs=[meanlay, epilay])
 
-    def train(self):
-        """ Trains the neural network based on the current data
-
-        Training iterates between training the disturbance output and the
-        epistemic uncertainty output
-
-        """
-        cw = compute_class_weight('balanced', np.unique(self.y_epi),
-                                  self.y_epi.flatten())
-        for i in range(self.TRAIN_ITER):
-            # hist = self.model_out.fit(self.Xtr, self.Ytr, **kwargs)
-            hist_epi = self.model_epi.fit(self.x_epi, self.y_epi, class_weight=cw,
-                                          epochs=self.TRAIN_EPOCHS, verbose=1)
-            hist = self.model_mean.fit(self.Xtra, self.Ytr,
-                                       epochs=self.TRAIN_EPOCHS, verbose=0)
-            # if np.isnan(hist_epi.history['loss']).any():
-            #     print('detected Nan')
-            # self.loss = self.loss + hist.history['loss'] + hist_epi.history[
-            #     'loss']
-        return hist.history['loss']
-
-
     def predict(self, x):
         """ Predicts outputs of the NN model for the given input x
 
@@ -95,7 +73,7 @@ class Negsep(EpiModel):
         return ypred, MinMaxScaler().fit_transform(epi)
 
 
-    def add_data(self, xtr, ytr):
+    def train(self, xtr, ytr):
         """ Adds new training data points to the disturbance model
 
         Selects data to be added and triggers retraining if necessary
@@ -106,26 +84,27 @@ class Negsep(EpiModel):
             epi_pred: epistemic uncertainty prediction at xtr
         """
 
-        if not hasattr(self, 'Xtr'):
-            # self.update_xy_epi(xtr)
-            self.Xtr = xtr
-            self.Ytr = ytr
-        else:
-            self.Xtr = np.concatenate((self.Xtr, xtr), axis=0)
-            self.Ytr = np.concatenate((self.Ytr, ytr), axis=0)
+        xtra = self._scaler.fit_transform(xtr)
+        self.x_epi, self.y_epi = self._generate_xy_epi(xtra)
+        
+        cw = compute_class_weight('balanced', np.unique(self.y_epi),
+                                  self.y_epi.flatten())
+        for i in range(self.TRAIN_ITER):
+            hist_epi = self.model_epi.fit(self.x_epi, self.y_epi, class_weight=cw,
+                                          epochs=self.TRAIN_EPOCHS, verbose=1)
+            hist = self.model_mean.fit(xtra, ytr,
+                                       epochs=self.TRAIN_EPOCHS, verbose=0)
+        return hist.history['loss']
 
-        self.Xtra = self._scaler.fit_transform(self.Xtr)
-        self.x_epi, self.y_epi = self._generate_xy_epi()
-
-    def _generate_xy_epi(self):
+    def _generate_xy_epi(self, xtra):
         """ Generates artificial data points for epistemic uncertainty estimate
 
         """
-        ntr = self.Xtra.shape[0]
+        ntr = xtra.shape[0]
 
         # ALTERNATIVE 1
         # distance = np.sum((self.x_epi.reshape(1,-1,self.DX)
-        #               - self.Xtra.reshape(ntr,1,self.DX))**2, axis=2)
+        #               - xtra.reshape(ntr,1,self.DX))**2, axis=2)
         # dis1fill = distance.min(axis = 0).reshape(-1,1)
         # RADIUS_TR = 0.0001
         # self.y_epi = (dis1fill > RADIUS_TR).astype(int)
@@ -147,10 +126,10 @@ class Negsep(EpiModel):
             cov_mat = cov * np.eye(self.DX)
             x_epilist = []
             distance = []
-            for x in self.Xtra:
+            for x in xtra:
                 xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
                 x_epilist.append(xepi)
-                distance.extend(cdist(xepi,self.Xtra).min(axis=1))
+                distance.extend(cdist(xepi,xtra).min(axis=1))
             x_epi = np.concatenate(x_epilist, axis=0)
             d = np.array(distance)
         else:
@@ -158,7 +137,7 @@ class Negsep(EpiModel):
             from numba.cuda.random import create_xoroshiro128p_states, \
                 xoroshiro128p_normal_float32
             print('Sampling EPI points on GPU')
-            Xtr = np.ascontiguousarray(self.Xtra, dtype = np.float32)
+            Xtr = np.ascontiguousarray(xtra, dtype = np.float32)
             # cuda.select_device(1)
             @cuda.jit
             def generate_rand(rng_states, Xtr, cov, Xepi, d):
@@ -195,7 +174,7 @@ class Negsep(EpiModel):
         idx = np.argpartition(d.reshape(-1), ntr)
 
         # find closest uncertain points
-        # d = x_epi.reshape(1, -1, self.DX) - self.Xtra.reshape(-1, 1, self.DX)
+        # d = x_epi.reshape(1, -1, self.DX) - xtra.reshape(-1, 1, self.DX)
         # distance = np.sum(d ** 2, axis=2)
         # idx = np.argpartition(distance.min(axis=0), ntr)
 
@@ -203,7 +182,7 @@ class Negsep(EpiModel):
 
         # replace by training data input and turn into certain points
         y_epi[idx[:ntr], :] = 0
-        x_epi[idx[:ntr], :] = self.Xtra
+        x_epi[idx[:ntr], :] = xtra
         return x_epi, y_epi
 
     def get_x_epi(self):
