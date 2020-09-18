@@ -42,7 +42,7 @@ nte = xte.shape[0]
 print('Read ' + str(ntr) + ' datapoints with ' + str(dx) + ' dimensions')
 
 # Model setup
-models, results = [],[]
+models, results,resultstr = [],[], []
  #models.append(bnn.BayesianNeuralNetwork(dx,dy))
 # models.append(gpmodel.GPmodel(dx,dy))
 models.append(negsep.NegSEp(dx,dy,1,2))
@@ -63,7 +63,7 @@ for model in models:
     t0 = time()
     result = model.weighted_RMSE(xte,yte)
     tevaluate = time() - t0
-    
+    resultstr[-1] = model.weighted_RMSE(xtr, ytr)
     results[-1] = result
     results[-1]['ttrain'] = ttrain
     results[-1]['tevaluate'] = tevaluate
@@ -114,9 +114,11 @@ for model in models:
 
 tab = tabulate([a.values() for a in results], headers=results[0].keys())
 print(tab)
-with open(data_name + '_results.txt', 'w') as f:
+with open('../results/' + data_name + '_results.txt', 'w') as f:
     print(tab, file=f) 
 
+tabtr = tabulate([a.values() for a in resultstr], headers=resultstr[0].keys())
+print(tabtr)
 print('Pau')
 
 

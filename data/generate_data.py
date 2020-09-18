@@ -173,15 +173,15 @@ filete = name + '_test.csv'
 infile = 'pmsm_temperature_data.csv'
 if not os.path.exists(filete) or not os.path.exists(filetr):
     if os.path.exists(infile):
-        data = np.genfromtxt(infile, delimiter=',',skip_header=1, skip_footer=990000)
+        data = np.genfromtxt(infile, delimiter=',',skip_header=1, skip_footer=900000)
         n = data.shape[0]
-        ntr = int(n*0.8)
-        nte = n-ntr
-        idxtr = np.isin(np.arange(n), np.random.choice(n, ntr, replace=False))
-        idxte = np.invert(idxtr)
-        np.savetxt(filetr, data[idxtr,:9], delimiter=',')
+        ntr = 8000
+        nte = 2000
+        if ntr + nte > n:
+            print('overlap traininig and test data')
+        np.savetxt(filetr, data[:ntr,:9], delimiter=',')
         print('Generated Data ' + filetr)
-        np.savetxt(filete, data[idxte,:9], delimiter=',')
+        np.savetxt(filete, data[-nte:,:9], delimiter=',')
         print('Generated Data ' + filete)
 
     else:
