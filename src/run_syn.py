@@ -2,7 +2,7 @@ import numpy as np
 import negsep
 import dropout
 import gpmodel
-# import bnn
+import bnn
 from tabulate import tabulate
 from time import time
 from utils import visualize
@@ -11,7 +11,7 @@ np.random.seed(1)
 
 # Add Datasets
 data_sets = []
-data_sets.append("synthetic_data_1D")
+# data_sets.append("synthetic_data_1D")
 data_sets.append("synthetic_data_1D_split")
 # data_sets.append("synthetic_data_2D_square")
 # data_sets.append("synthetic_data_2D_gaussian")
@@ -37,12 +37,13 @@ for data_name in data_sets:
 
     # Add Models
     models, results = [],[]
-    # models.append(bnn.BayesianNeuralNetwork(dx,dy))
+    models.append(bnn.BNN(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 2000,
+                                 LEARNING_RATE = 0.01, N_SAMPLES = 1000,))
     models.append(gpmodel.GPmodel(DX = dx, DY = dy,ARD = True, LENGTHSCALE = 0.5))
     models.append(negsep.Negsep(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 5,TRAIN_ITER = 5,
-                                 LEARNING_RATE = 0.01, R_EPI = 1, N_EPI = 4))
+                                  LEARNING_RATE = 0.01, R_EPI = 1, N_EPI = 4))
     models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 25,
-                                 LEARNING_RATE = 0.01, N_SAMPLES = 100, DROPOUT_RATE = 0.05))
+                               LEARNING_RATE = 0.01, N_SAMPLES = 100, DROPOUT_RATE = 0.05))
 
     for model in models:
         model_name = model.__class__.__name__
