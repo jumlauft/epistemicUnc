@@ -67,8 +67,9 @@ class BNN(EpiModel):
         ])
         self.model.compile(loss=lambda y, yhat: -yhat.log_prob(y),
                       optimizer=tfk.optimizers.Adam(LEARNING_RATE))
-    def train(self, xtr, ytr):
-        history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS, verbose=1)
+    def train(self, xtr, ytr, display_progress = False):
+        history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS,
+                                 verbose=int(display_progress))
         return history.history['loss']
 
     def predict(self, x):

@@ -5,22 +5,22 @@ import gpmodel
 import bnn
 from tabulate import tabulate
 from time import time
-from utils import visualize
+from utils import visualize, data2csv
 
-np.random.seed(1)
 
 # Add Datasets
 data_sets = []
-# data_sets.append("synthetic_data_1D")
-data_sets.append("synthetic_data_1D_split")
+data_sets.append("synthetic_data_1D")
+# data_sets.append("synthetic_data_1D_split")
 # data_sets.append("synthetic_data_2D_square")
 # data_sets.append("synthetic_data_2D_gaussian")
-# data_sets.append("sarcos")
 # data_sets.append("wine_quality")
 # data_sets.append("motor_temperature")
+# data_sets.append("sarcos")
+
 
 for data_name in data_sets:
-
+    np.random.seed(1)
     # Read data
     print('Read data: ' + data_name + '...')
     train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
@@ -37,15 +37,19 @@ for data_name in data_sets:
 
     # Add Models
     models, results = [],[]
+    models.append(gpmodel.GPmodel(DX = dx, DY = dy, ARD = True,
+                                  LENGTHSCALE = 0.5))
     models.append(bnn.BNN(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 2000,
                                  LEARNING_RATE = 0.01, N_SAMPLES = 1000,))
-    models.append(gpmodel.GPmodel(DX = dx, DY = dy,ARD = True, LENGTHSCALE = 0.5))
-    models.append(negsep.Negsep(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 5,TRAIN_ITER = 5,
-                                  LEARNING_RATE = 0.01, R_EPI = 1, N_EPI = 4))
-    models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 25,
-                               LEARNING_RATE = 0.01, N_SAMPLES = 100, DROPOUT_RATE = 0.05))
+    models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50,
+                                  TRAIN_EPOCHS = 150, LEARNING_RATE = 0.01,
+                                  N_SAMPLES = 100, DROPOUT_RATE = 0.05))
+    models.append(negsep.Negsep(DX = dx, DY = dy, N_HIDDEN = 50,
+                                TRAIN_EPOCHS = 10,TRAIN_ITER = 5,
+                                LEARNING_RATE = 0.01, R_EPI = 1, N_EPI = 4))
 
     for model in models:
+        np.random.seed(1)
         model_name = model.__class__.__name__
         results.append({'model_name':model_name})
         print('Processing '+ model_name + ':')
@@ -53,17 +57,22 @@ for data_name in data_sets:
         # Training
         print('Training...')
         t0 = time()
-        model.train(xtr,ytr)
+        model.train(xtr,ytr, display_progress = True)
         results[-1].update({'ttrain':time() - t0})
         
         # Evaluation
         print('Evaluating...')
         t0 = time()
-        results[-1].update(model.evaluate(xte,yte, xtr, ytr))
+        results[-1].update(model.evaluate(xte, yte, xtr, ytr))
         results[-1].update({'tevaluate':time() - t0})
-        
-        visualize(model,xtr, ytr, xte, yte)
-    
+
+        if dx == 1 or dx == 2:
+            modelte, epi = visualize(model,xtr, ytr, xte, yte)
+
+            data2csv('../results/' + data_name + '_' + model_name + '.csv',
+                     xtr = xtr, ytr = ytr, xte = xte, yte = yte,
+                     modelte = modelte, epi = epi,
+                     x_epi = model.get_x_epi(), y_epi = model.get_y_epi())
     # Print and save results
     tab = tabulate([a.values() for a in results], headers=results[0].keys())
     print(tab)

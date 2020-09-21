@@ -1,22 +1,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
-def discounted_rmse(y, ypred, epi):
+
+def discounted_mse(y, ypred, epi):
     squared_error = (ypred - y) ** 2
-    rmse = np.sqrt(squared_error.mean())
+    mse = squared_error.mean()
     total_discount = epi.mean()
-    rmse_discounted = np.sqrt((squared_error * (1-epi)).mean()) * total_discount
-    return rmse, rmse_discounted, total_discount
+    mse_discounted = (squared_error * (1-epi)).sum() / (1-epi).sum()
+    return mse, mse_discounted, total_discount
 
-def eval_discounted_rmse(yte, ypredte, epite, ytr, ypredtr, epitr):
-    rmse_test, rmse_discounted_test, total_discount_test = discounted_rmse(yte, ypredte, epite)
-    rmse_train, rmse_discounted_train, total_discount_train = discounted_rmse(ytr, ypredtr, epitr)
-    return {'rmse_test': rmse_test,
-            'rmse_discounted_test': rmse_discounted_test,
+def eval_discounted_mse(yte, ypredte, epite, ytr, ypredtr, epitr):
+    mse_test, mse_discounted_test, total_discount_test = discounted_mse(yte, ypredte, epite)
+    mse_train, mse_discounted_train, total_discount_train = discounted_mse(ytr, ypredtr, epitr)
+    return {'mse_test': mse_test,
+            'mse_discounted_test': mse_discounted_test,
             'total_discount_test': total_discount_test, 
-            'rmse_train': rmse_train,
-            'rmse_discounted_train': rmse_discounted_train,
+            'mse_train': mse_train,
+            'mse_discounted_train': mse_discounted_train,
             'total_discount_train': total_discount_train}
+
+
+def data2csv(fout, **kwargs):
+    df = pd.DataFrame()
+    for name in kwargs:
+        try:
+            if kwargs[name].ndim == 1:
+                df[name] = kwargs[name]
+            elif kwargs[name].ndim == 2:
+                for i, col in enumerate(kwargs[name].T):
+                    df[name + '_' + str(i)] = pd.Series(col)
+            else:
+                raise Exception("must be 1 or 2 dimensional")
+        except AttributeError:
+            pass
+    df.to_csv(fout)
 
 
 def visualize(model,xtr, ytr, xte, yte):
@@ -36,10 +54,9 @@ def visualize(model,xtr, ytr, xte, yte):
         ax.set_title('Epistemic Uncertainty')
         plt.plot(xte, epi, color="blue")
         plt.plot(xtr, np.zeros(ntr),'x', color="red")
-        try:
-            plt.plot(model.get_x_epi()[:, 0], model.get_y_epi(), 'o', color="green")
-        except AttributeError:
-            pass
+        x_epi,y_epi = model.get_x_epi(), model.get_y_epi()
+        if x_epi is not None:
+            plt.plot(x_epi[:, 0], y_epi, 'o', color="green")
         plt.show()
 
     elif dx == 2:
@@ -57,7 +74,8 @@ def visualize(model,xtr, ytr, xte, yte):
         ax.set_title('Epistemic Uncertainty')
         ax.scatter(xte[:, 0], xte[:, 1], epi, color="blue")
         ax.scatter(xtr[:, 0], xtr[:, 1], np.zeros(ntr), color="red")
-        try:
-            ax.scatter(model.get_x_epi()[:, 0], model.get_x_epi()[:, 1], model.y_epi, color="green")
-        except AttributeError:
-            pass
+        x_epi,y_epi = model.get_x_epi(), model.get_y_epi()
+        if x_epi is not None:
+            ax.scatter(x_epi[:, 0], x_epi[:, 1], y_epi, color="green")
+
+    return modelte, epi

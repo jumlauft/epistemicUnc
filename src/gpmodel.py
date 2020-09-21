@@ -24,7 +24,7 @@ class GPmodel(EpiModel):
         self.GP = None
 
 
-    def train(self, xtr, ytr):
+    def train(self, xtr, ytr, display_progress = False):
         """ Trains the neural network based on the current data
 
         Training iterates between training the disturbance output and the
@@ -33,7 +33,7 @@ class GPmodel(EpiModel):
         """
         self.GP = GPy.models.GPRegression(xtr, ytr, self.kernel)
 
-        self.GP.optimize(messages=True)
+        self.GP.optimize(messages=display_progress)
 
     def predict(self, x):
         """ Predicts outputs of the NN model for the given input x

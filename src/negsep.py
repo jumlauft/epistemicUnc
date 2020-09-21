@@ -73,7 +73,7 @@ class Negsep(EpiModel):
         return ypred, MinMaxScaler().fit_transform(epi)
 
 
-    def train(self, xtr, ytr):
+    def train(self, xtr, ytr, display_progress = False):
         """ Adds new training data points to the disturbance model
 
         Selects data to be added and triggers retraining if necessary
@@ -91,7 +91,8 @@ class Negsep(EpiModel):
                                   self.y_epi.flatten())
         for i in range(self.TRAIN_ITER):
             hist_epi = self.model_epi.fit(self.x_epi, self.y_epi, class_weight=cw,
-                                          epochs=self.TRAIN_EPOCHS, verbose=1)
+                                          epochs=self.TRAIN_EPOCHS,
+                                          verbose=int(display_progress))
             hist = self.model_mean.fit(xtra, ytr,
                                        epochs=self.TRAIN_EPOCHS, verbose=0)
         return hist.history['loss']

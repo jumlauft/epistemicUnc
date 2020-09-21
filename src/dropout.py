@@ -4,7 +4,6 @@ from epimodel import EpiModel
 import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, InputLayer, Activation
-from utils import eval_discounted_rmse
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -47,8 +46,9 @@ class Dropout(EpiModel):
         self.model.compile(optimizer=tf.optimizers.RMSprop(learning_rate = LEARNING_RATE), 
                            loss='mean_squared_error')
 
-    def train(self, xtr, ytr):
-        history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS, verbose=1)
+    def train(self, xtr, ytr, display_progress = False):
+        history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS,
+                                 verbose=int(display_progress))
         return history.history['loss']
 
     def predict(self,x):
