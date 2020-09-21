@@ -79,3 +79,13 @@ def visualize(model,xtr, ytr, xte, yte):
             ax.scatter(x_epi[:, 0], x_epi[:, 1], y_epi, color="green")
 
     return modelte, epi
+
+def classvar2file(class_to_store, fout):
+    import inspect
+    import json
+    att = inspect.getmembers(class_to_store,
+                             lambda a: not (inspect.isroutine(a)))
+    pdict = dict([a for a in att if not (a[0].startswith('_') or
+                                         a[0].endswith('_'))])
+    with open(fout, 'w') as json_file:
+        json.dump(pdict, json_file)

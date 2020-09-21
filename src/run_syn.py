@@ -5,18 +5,18 @@ import gpmodel
 import bnn
 from tabulate import tabulate
 from time import time
-from utils import visualize, data2csv
+from utils import visualize, data2csv, classvar2file
 
 
 # Add Datasets
 data_sets = []
 data_sets.append("synthetic_data_1D")
-# data_sets.append("synthetic_data_1D_split")
-# data_sets.append("synthetic_data_2D_square")
-# data_sets.append("synthetic_data_2D_gaussian")
-# data_sets.append("wine_quality")
-# data_sets.append("motor_temperature")
-# data_sets.append("sarcos")
+data_sets.append("synthetic_data_1D_split")
+data_sets.append("synthetic_data_2D_square")
+data_sets.append("synthetic_data_2D_gaussian")
+data_sets.append("wine_quality")
+data_sets.append("motor_temperature")
+data_sets.append("sarcos")
 
 
 for data_name in data_sets:
@@ -42,22 +42,22 @@ for data_name in data_sets:
     models.append(bnn.BNN(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 2000,
                                  LEARNING_RATE = 0.01, N_SAMPLES = 1000,))
     models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50,
-                                  TRAIN_EPOCHS = 150, LEARNING_RATE = 0.01,
+                                  TRAIN_EPOCHS = 100, LEARNING_RATE = 0.01,
                                   N_SAMPLES = 100, DROPOUT_RATE = 0.05))
     models.append(negsep.Negsep(DX = dx, DY = dy, N_HIDDEN = 50,
-                                TRAIN_EPOCHS = 10,TRAIN_ITER = 5,
+                                TRAIN_EPOCHS = 20,TRAIN_ITER = 5,
                                 LEARNING_RATE = 0.01, R_EPI = 1, N_EPI = 4))
 
     for model in models:
         np.random.seed(1)
         model_name = model.__class__.__name__
         results.append({'model_name':model_name})
-        print('Processing '+ model_name + ':')
+        print(model_name + ':')
           
         # Training
         print('Training...')
         t0 = time()
-        model.train(xtr,ytr, display_progress = True)
+        model.train(xtr,ytr, display_progress = False)
         results[-1].update({'ttrain':time() - t0})
         
         # Evaluation
@@ -73,6 +73,7 @@ for data_name in data_sets:
                      xtr = xtr, ytr = ytr, xte = xte, yte = yte,
                      modelte = modelte, epi = epi,
                      x_epi = model.get_x_epi(), y_epi = model.get_y_epi())
+        classvar2file(model_name,'../results/' + model_name + '.json')
     # Print and save results
     tab = tabulate([a.values() for a in results], headers=results[0].keys())
     print(tab)
