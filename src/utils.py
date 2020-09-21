@@ -1,21 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def discounted_rmse(y, ypred, epi):
+def discounted_mse(y, ypred, epi):
     squared_error = (ypred - y) ** 2
-    rmse = np.sqrt(squared_error.mean())
+    mse = squared_error.mean()
     total_discount = epi.mean()
-    rmse_discounted = np.sqrt((squared_error * (1-epi)).mean()) * total_discount
-    return rmse, rmse_discounted, total_discount
+    mse_discounted = (squared_error * (1-epi)).sum() / (1-epi).sum()
+    return mse, mse_discounted, total_discount
 
-def eval_discounted_rmse(yte, ypredte, epite, ytr, ypredtr, epitr):
-    rmse_test, rmse_discounted_test, total_discount_test = discounted_rmse(yte, ypredte, epite)
-    rmse_train, rmse_discounted_train, total_discount_train = discounted_rmse(ytr, ypredtr, epitr)
-    return {'rmse_test': rmse_test,
-            'rmse_discounted_test': rmse_discounted_test,
+def eval_discounted_mse(yte, ypredte, epite, ytr, ypredtr, epitr):
+    mse_test, mse_discounted_test, total_discount_test = discounted_mse(yte, ypredte, epite)
+    mse_train, mse_discounted_train, total_discount_train = discounted_mse(ytr, ypredtr, epitr)
+    return {'mse_test': mse_test,
+            'mse_discounted_test': mse_discounted_test,
             'total_discount_test': total_discount_test, 
-            'rmse_train': rmse_train,
-            'rmse_discounted_train': rmse_discounted_train,
+            'mse_train': mse_train,
+            'mse_discounted_train': mse_discounted_train,
             'total_discount_train': total_discount_train}
 
 

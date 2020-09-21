@@ -1,0 +1,4 @@
+model_name       ttrain    mse_test    mse_discounted_test    total_discount_test    mse_train    mse_discounted_train    total_discount_train    tevaluate
+------------  ---------  ----------  ---------------------  ---------------------  -----------  ----------------------  ----------------------  -----------
+Negsep        3032.87      147.654                 9.76813               0.49468       8.20028                 9.89631                0.31765      0.634609
+Dropout         45.5295     55.6896               43.8345                0.179986     10.7454                  9.51286                0.165125    38.3247

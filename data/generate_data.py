@@ -120,29 +120,59 @@ else:
 
 # Sarcos Data
 filename = "sarcos_train.csv"
-idx = list(range(21))
-idx.append(21)
+infile = "sarcos_inv_train.mat"
+
 if not os.path.exists(filename):
-    urllib.request.urlretrieve("http://www.gaussianprocess.org/gpml/data/sarcos_inv.mat", "sarcos_inv.mat")
-    train_data = loadmat('sarcos_inv.mat')['sarcos_inv'].astype(np.float32)
-    np.savetxt(filename, train_data[:,idx], delimiter=',')
-    os.remove("sarcos_inv.mat")
+    urllib.request.urlretrieve("http://www.gaussianprocess.org/gpml/data/sarcos_inv.mat", infile)
+    data = loadmat(infile)['sarcos_inv'].astype(np.float32)
+    n = data.shape[0]
+    ntr = 10000
+    idx = np.random.choice(n, ntr, replace=False)
+    np.savetxt(filename, data[idx,:22], delimiter=',')
+    os.remove(infile)
     print('Generated Data ' + filename)
 else:
     print('Data existed ' + filename)
 
 filename = "sarcos_test.csv"
+infile = "sarcos_inv_test.mat"
 if not os.path.exists(filename):
-    matfile = "sarcos_inv_test.mat"
-    urllib.request.urlretrieve("http://www.gaussianprocess.org/gpml/data/sarcos_inv_test.mat", matfile)
-
-    train_data = loadmat(matfile)['sarcos_inv_test'].astype(np.float32)
-    np.savetxt(filename, train_data[:,idx], delimiter=',')
-    os.remove(matfile)
+    urllib.request.urlretrieve("http://www.gaussianprocess.org/gpml/data/sarcos_inv_test.mat", infile)
+    data = loadmat(infile)['sarcos_inv_test'].astype(np.float32)
+    n = data.shape[0]
+    nte = 2000
+    idx = np.isin(np.arange(n), np.random.choice(n, nte, replace=False))
+    np.savetxt(filename, data[idx,:22], delimiter=',')
+    os.remove(infile)
     print('Generated Data ' + filename)
 else:
     print('Data existed ' + filename)
 
+# Motor temperature
+name = "motor_temperature"
+filetr = name + '_train.csv'
+filete = name + '_test.csv'
+infile = 'pmsm_temperature_data.csv'
+if not os.path.exists(filete) or not os.path.exists(filetr):
+    if os.path.exists(infile):
+        data = np.genfromtxt(infile, delimiter=',',skip_header=1 , skip_footer=986000)
+        n = data.shape[0]
+        ntr = 10000
+        nte = 2000
+        if ntr + nte > n:
+            print('Motor temperature: Not enough data loaded')
+        else:
+            idxte = np.isin(np.arange(n), np.random.choice(n, nte, replace=False))
+            idxtr = np.invert(idxte)
+            np.savetxt(filetr, data[idxtr,:9], delimiter=',')
+            print('Generated Data ' + filetr)
+            np.savetxt(filete, data[idxte,:9], delimiter=',')
+            print('Generated Data ' + filete)
+    else:
+        print('please download'+infile+' from https://www.kaggle.com/wkirgsn/electric-motor-temperature')
+else:
+    print('Data existed ' + filetr)
+    print('Data existed ' + filete)
 
 
 # Wine quality
@@ -152,42 +182,20 @@ filete = name + '_test.csv'
 infile = 'wine_quality.csv'
 if not os.path.exists(filete) or not os.path.exists(filetr):
     if os.path.exists(infile):
+        np.random.seed(1)
         data = np.genfromtxt(infile, delimiter=',',skip_header=1)
         n = data.shape[0]
-        ntr = int(n*0.8)
-        nte = n-ntr
-        idxtr = np.isin(np.arange(n), np.random.choice(n, ntr, replace=False))
-        idxte = np.invert(idxtr)
+        nte = int(n/6)
+        ntr = n-nte
+        idxte = np.isin(np.arange(n), np.random.choice(n, nte, replace=False))
+        idxtr = np.invert(idxte)
         np.savetxt(filetr, data[idxtr,:], delimiter=',')
         print('Generated Data ' + filetr)
         np.savetxt(filete, data[idxte,:], delimiter=',')
         print('Generated Data ' + filete)
-
     else:
-        print('please download wine_quality.csv from https://www.kaggle.com/msjaiclub/regression/download')
+        print('please download '+infile+' from https://www.kaggle.com/msjaiclub/regression/download')
 else:
     print('Data existed ' + filetr)
     print('Data existed ' + filete)
 
-# Motor temperature
-name = "motor_temperature"
-filetr = name + '_train.csv'
-filete = name + '_test.csv'
-infile = 'pmsm_temperature_data.csv'
-if not os.path.exists(filete) or not os.path.exists(filetr):
-    if os.path.exists(infile):
-        data = np.genfromtxt(infile, delimiter=',',skip_header=1, skip_footer=900000)
-        n = data.shape[0]
-        ntr = 50000
-        nte = 5000
-        if ntr + nte > n:
-            print('overlap traininig and test data')
-        np.savetxt(filetr, data[:ntr,:9], delimiter=',')
-        print('Generated Data ' + filetr)
-        np.savetxt(filete, data[-nte:,:9], delimiter=',')
-        print('Generated Data ' + filete)
-    else:
-        print('please download'+infile+'from https://www.kaggle.com/wkirgsn/electric-motor-temperature')
-else:
-    print('Data existed ' + filetr)
-    print('Data existed ' + filete)

@@ -7,20 +7,19 @@ from tabulate import tabulate
 from time import time
 from utils import visualize
 
-np.random.seed(1)
 
 # Add Datasets
 data_sets = []
 data_sets.append("synthetic_data_1D")
 data_sets.append("synthetic_data_1D_split")
-# data_sets.append("synthetic_data_2D_square")
-# data_sets.append("synthetic_data_2D_gaussian")
-# data_sets.append("sarcos")
-# data_sets.append("wine_quality")
-# data_sets.append("motor_temperature")
+data_sets.append("synthetic_data_2D_square")
+data_sets.append("synthetic_data_2D_gaussian")
+data_sets.append("sarcos")
+data_sets.append("wine_quality")
+data_sets.append("motor_temperature")
 
 for data_name in data_sets:
-
+    np.random.seed(1)
     # Read data
     print('Read data: ' + data_name + '...')
     train_data = np.genfromtxt('../data/'+data_name+'_train.csv', delimiter=',')
@@ -39,12 +38,13 @@ for data_name in data_sets:
     models, results = [],[]
     # models.append(bnn.BayesianNeuralNetwork(dx,dy))
     models.append(gpmodel.GPmodel(DX = dx, DY = dy,ARD = True, LENGTHSCALE = 0.5))
-    models.append(negsep.Negsep(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 5,TRAIN_ITER = 5,
+    models.append(negsep.Negsep(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 10,TRAIN_ITER = 5,
                                  LEARNING_RATE = 0.01, R_EPI = 1, N_EPI = 4))
-    models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 25,
+    models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 50,
                                  LEARNING_RATE = 0.01, N_SAMPLES = 100, DROPOUT_RATE = 0.05))
 
     for model in models:
+        np.random.seed(1)
         model_name = model.__class__.__name__
         results.append({'model_name':model_name})
         print('Processing '+ model_name + ':')
