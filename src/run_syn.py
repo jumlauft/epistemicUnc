@@ -10,12 +10,11 @@ from utils import visualize, data2csv, classvar2file
 
 # Add Datasets
 data_sets = []
-data_sets.append("synthetic_data_1D")
-data_sets.append("synthetic_data_1D_split")
-data_sets.append("synthetic_data_2D_square")
-data_sets.append("synthetic_data_2D_gaussian")
-data_sets.append("wine_quality")
-data_sets.append("motor_temperature")
+# data_sets.append("synthetic_data_1D")
+# data_sets.append("synthetic_data_1D_split")
+# data_sets.append("synthetic_data_2D_square")
+# data_sets.append("synthetic_data_2D_gaussian")
+data_sets.append("pmsm_temperature")
 data_sets.append("sarcos")
 
 
@@ -29,8 +28,8 @@ for data_name in data_sets:
     xtr, ytr = train_data[:,:-1], train_data[:,-1:]
     xte, yte = test_data[:,:-1], test_data[:,-1:]
 
-    ntr,dx = xtr.shape
-    nte,dy = yte.shape
+    ntr, dx = xtr.shape
+    nte, dy = yte.shape
 
     print('Read ' + str(ntr) + ' training  and ' + str(nte) + ' test data points')
     print('Input dimension: ' + str(dx) + ', Output dimension: ' + str(dy))
@@ -40,7 +39,7 @@ for data_name in data_sets:
     models.append(gpmodel.GPmodel(DX = dx, DY = dy, ARD = True,
                                   LENGTHSCALE = 0.5))
     models.append(bnn.BNN(DX = dx, DY = dy, N_HIDDEN = 50, TRAIN_EPOCHS = 2000,
-                                 LEARNING_RATE = 0.01, N_SAMPLES = 1000,))
+                                  LEARNING_RATE = 0.01, N_SAMPLES = 1000,))
     models.append(dropout.Dropout(DX = dx, DY = dy, N_HIDDEN = 50,
                                   TRAIN_EPOCHS = 100, LEARNING_RATE = 0.01,
                                   N_SAMPLES = 100, DROPOUT_RATE = 0.05))
@@ -57,7 +56,7 @@ for data_name in data_sets:
         # Training
         print('Training...')
         t0 = time()
-        model.train(xtr,ytr, display_progress = False)
+        loss = model.train(xtr,ytr, display_progress = False)
         results[-1].update({'ttrain':time() - t0})
         
         # Evaluation
@@ -71,9 +70,8 @@ for data_name in data_sets:
 
             data2csv('../results/' + data_name + '_' + model_name + '.csv',
                      xtr = xtr, ytr = ytr, xte = xte, yte = yte,
-                     modelte = modelte, epi = epi,
+                     modelte = modelte, epi = epi, loss = loss,
                      x_epi = model.get_x_epi(), y_epi = model.get_y_epi())
-        classvar2file(model_name,'../results/' + model_name + '.json')
     # Print and save results
     tab = tabulate([a.values() for a in results], headers=results[0].keys())
     print(tab)
