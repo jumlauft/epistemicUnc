@@ -47,7 +47,7 @@ def visualize(model,xtr, ytr, xte, yte):
         ax.set_title('Model Prediction')
         ax.plot(xtr, ytr, 'o', color="blue", label='training')
         ax.plot(xte, modelte, color="red", label='model')
-        ax.plot(xte, yte, color="orange", label='test')
+        ax.plot(xte, yte, color="orange", label='tests')
         ax.legend()
 
         ax = modelfig.add_subplot(122)
@@ -67,7 +67,7 @@ def visualize(model,xtr, ytr, xte, yte):
         ax.set_title('Model Prediction')
         ax.scatter(xtr[:, 0], xtr[:, 1], ytr, color="blue", label='training')
         ax.scatter(xte[:, 0], xte[:, 1], modelte, color="red", label='model')
-        ax.scatter(xte[:, 0], xte[:, 1], yte[:,0], color="orange", label='test')
+        ax.scatter(xte[:, 0], xte[:, 1], yte[:,0], color="orange", label='tests')
         ax.legend()
 
         ax = modelfig.add_subplot(122, projection='3d')

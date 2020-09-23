@@ -36,7 +36,7 @@ def main(SMOKE_TEST):
         ntr, dx = xtr.shape
         nte, dy = yte.shape
 
-        print('Read ' + str(ntr) + ' training  and ' + str(nte) + ' test data points')
+        print('Read ' + str(ntr) + ' training  and ' + str(nte) + ' tests data points')
         print('Input dimension: ' + str(dx) + ', Output dimension: ' + str(dy))
 
         # Add Models
