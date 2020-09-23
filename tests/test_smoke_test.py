@@ -3,8 +3,8 @@ import numpy as np
 import os
 def test_main():
     name = "smoke"
-    fnametr = '../data/' + name + '_train.csv'
-    fnamete = '../data/' + name + '_test.csv'
+    fnametr = './data/' + name + '_train.csv'
+    fnamete = './data/' + name + '_test.csv'
 
     dx, dy = 2, 1
     ntr, nte = 10, 5
@@ -17,5 +17,5 @@ def test_main():
 
     os.remove(fnametr)
     os.remove(fnamete)
-    os.remove('../results/smoke.txt')
+    os.remove('./results/smoke.txt')
 
