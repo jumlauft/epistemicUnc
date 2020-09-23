@@ -21,8 +21,8 @@ class Negsep(EpiModel):
         Attributes:
             DX (int): input dimension
             DY (int): output dimension
-            x_epi (numpy array): input locations where no data is available
-            y_epi (numpy array): output indicating high/low uncertainty
+            x_epi ((nepi,dx) np array): input locations where no data is available
+            y_epi ((nepi,) np array): output indicating high/low uncertainty
             _scaler (sklearn scaler): scaler for data
             loss (list): loss over training epochs
 
@@ -104,23 +104,14 @@ class Negsep(EpiModel):
     def _generate_xy_epi(self, xtra):
         """ Generates artificial data points for epistemic uncertainty estimate
 
+        Args:
+            xtra: scaled input training data points
+
         """
         ntr = xtra.shape[0]
 
-        # ALTERNATIVE 1
-        # distance = np.sum((self.x_epi.reshape(1,-1,self.DX)
-        #               - xtra.reshape(ntr,1,self.DX))**2, axis=2)
-        # dis1fill = distance.min(axis = 0).reshape(-1,1)
-        # RADIUS_TR = 0.0001
-        # self.y_epi = (dis1fill > RADIUS_TR).astype(int)
 
-        # ALTERNATIVE 2
-        # Generate uncertain points
-        # self.x_epi = self._generate_rand_epi(self.N_EPI + ntr)
-        # self.y_epi = np.ones((self.N_EPI + ntr, 1))
-
-        # ALTERNATIVE 3
-        # Generate uncertain points
+        # Generate uncertain points (on GPU if available)
         cov = self.R_EPI
         Nepi = self.N_EPI * self.DX
 
@@ -179,11 +170,6 @@ class Negsep(EpiModel):
 
         y_epi = np.ones((x_epi.shape[0], 1))
         idx = np.argpartition(d.reshape(-1), ntr)
-
-        # find closest uncertain points
-        # d = x_epi.reshape(1, -1, self.DX) - xtra.reshape(-1, 1, self.DX)
-        # distance = np.sum(d ** 2, axis=2)
-        # idx = np.argpartition(distance.min(axis=0), ntr)
 
         # replace by training data input and turn into certain points
         y_epi[idx[:ntr], :] = 0

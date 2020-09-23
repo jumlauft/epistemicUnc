@@ -9,6 +9,7 @@ from src.utils import visualize, data2csv
 
 
 def main(SMOKE_TEST):
+
     # Add Datasets
     data_sets = []
     if not SMOKE_TEST:
@@ -23,6 +24,7 @@ def main(SMOKE_TEST):
 
     for data_name in data_sets:
         np.random.seed(1)
+
         # Read data
         print('Read data: ' + data_name + '...')
         train_data = np.genfromtxt('./data/' + data_name + '_train.csv',
@@ -39,6 +41,7 @@ def main(SMOKE_TEST):
         print('Read ' + str(ntr) + ' training  and ' + str(
             nte) + ' tests data points')
         print('Input dimension: ' + str(dx) + ', Output dimension: ' + str(dy))
+
 
         # Add Models
         models, results = [], []
@@ -71,6 +74,7 @@ def main(SMOKE_TEST):
             results[-1].update(model.evaluate(xte, yte, xtr, ytr))
             results[-1].update({'tevaluate': time() - t0})
 
+            # Visualization
             if dx == 1 or dx == 2:
                 modelte, epi = visualize(model, xtr, ytr, xte, yte)
 
@@ -78,6 +82,7 @@ def main(SMOKE_TEST):
                          xtr=xtr, ytr=ytr, xte=xte, yte=yte,
                          modelte=modelte, epi=epi, loss=loss,
                          x_epi=model.get_x_epi(), y_epi=model.get_y_epi())
+
         # Print and save results
         tab = tabulate([a.values() for a in results], headers=results[0].keys())
         print(tab)

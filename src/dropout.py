@@ -34,6 +34,16 @@ class PermaDropout(tf.keras.layers.Layer):
 class Dropout(EpiModel):
     def __init__(self, N_HIDDEN=10, TRAIN_EPOCHS=10, LEARNING_RATE=0.01,
                  N_SAMPLES=10, DROPOUT_RATE=0.05, **kwargs):
+        """
+
+        Args:
+            N_HIDDEN: Number of nodes per hidden layer(2)
+            TRAIN_EPOCHS: number of training epochs
+            LEARNING_RATE: learning rate for RMSprop algorithm
+            N_SAMPLES: number of samples used for prediction
+            DROPOUT_RATE: probability for turning a node off
+            **kwargs:
+        """
         super().__init__(**kwargs)
 
         self.N_SAMPLES = N_SAMPLES
@@ -51,11 +61,30 @@ class Dropout(EpiModel):
                            loss='mean_squared_error')
 
     def train(self, xtr, ytr, display_progress=False):
+        """ Training the model
+
+        Args:
+            xtr: input training points
+            ytr: output training points
+            display_progress: boolean
+
+        Returns:
+            list: loss over epochs
+        """
         history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS,
                                  verbose=int(display_progress))
         return history.history['loss']
 
     def predict(self, x):
+        """ predicts model output and epistemic uncertainty
+
+        Args:
+            x: inputs
+
+        Returns:
+            mean: prediction
+            epi: epistemic uncertainty estimate
+        """
         nte = x.shape[0]
         xt = np.tile(x, (self.N_SAMPLES, 1))
         yte = self.model.predict(xt).reshape(self.N_SAMPLES, nte, self.DY)

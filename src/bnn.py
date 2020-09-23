@@ -21,6 +21,17 @@ class BNN(EpiModel):
         klw = 1 / 200
 
         def prior_trainable(kernel_size, bias_size=0, dtype=None):
+            """
+
+            Args:
+                kernel_size:
+                bias_size:
+                dtype:
+            References:
+                # https://matthewmcateer.me/blog/a-quick-intro-to-bayesian-neural-networks/
+            Returns: Keras model
+
+            """
             n = kernel_size + bias_size
             return tf.keras.Sequential([
                 tfp.layers.VariableLayer(n, dtype=dtype),
@@ -41,7 +52,9 @@ class BNN(EpiModel):
                     reinterpreted_batch_ndims=1)),
             ])
 
-        # %% Model definition
+        # Model definition
+        # https://github.com/tensorflow/probability/issues/815
+
         self.model = tfk.models.Sequential([
             tfp.layers.DenseVariational(N_HIDDEN, activation="relu",
                                         input_shape=[self.DX],
@@ -68,11 +81,28 @@ class BNN(EpiModel):
                            optimizer=tfk.optimizers.Adam(LEARNING_RATE))
 
     def train(self, xtr, ytr, display_progress=False):
+        """ Train model
+
+        Args:
+            xtr ((ntr,dx) np array): input training data
+            ytr ((ntr,dy) np array): output training data
+            display_progress:
+
+        Returns:
+            list loss over epochs
+        """
         history = self.model.fit(xtr, ytr, epochs=self.TRAIN_EPOCHS,
                                  verbose=int(display_progress))
         return history.history['loss']
 
     def predict(self, x):
+        """ prediction of model mean and epistemic uncertainty
+
+        Args:
+            x ((nte,dx) np array): input test data
+        Returns:
+            mean, epistemic uncertainty (scaled to [0,1])
+        """
         nte = x.shape[0]
         yte = self.model.predict(np.tile(x, (self.N_SAMPLES, 1))).reshape(
             self.N_SAMPLES, nte, self.DY)

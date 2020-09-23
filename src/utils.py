@@ -4,6 +4,17 @@ import pandas as pd
 
 
 def discounted_mse(y, ypred, epi):
+    """ Computes discounted mean squared error
+    Args:
+        y: outputs
+        ypred: predicted outputs
+        epi: epistemic uncertainty
+
+    Returns:
+        mse: mean squared error
+        mse_discounted: discounted mean squared error
+        total_discount: mean of predicted epistemic uncertainty
+    """
     squared_error = (ypred - y) ** 2
     mse = squared_error.mean()
     total_discount = epi.mean()
@@ -12,6 +23,19 @@ def discounted_mse(y, ypred, epi):
 
 
 def eval_discounted_mse(yte, ypredte, epite, ytr, ypredtr, epitr):
+    """ Wrapper to computed discounted mean square error
+
+    Args:
+        yte: outputs test
+        ypredte: predicted test
+        epite: epistemic uncertainty test
+        ytr: outputs train
+        ypredtr: predicted train
+        epitr: epistemic uncertainty train
+
+    Returns:
+        dict: contains mse, mse_discounted, total_discount for test/train data
+    """
     mse_test, mse_discounted_test, total_discount_test = \
         discounted_mse(yte, ypredte, epite)
     mse_train, mse_discounted_train, total_discount_train = \
@@ -25,6 +49,12 @@ def eval_discounted_mse(yte, ypredte, epite, ytr, ypredtr, epitr):
 
 
 def data2csv(fout, **kwargs):
+    """ save numpy array upto 2 dimensions or lists to csv files
+
+    Args:
+        fout: file name
+        **kwargs: numpy arrays or lists
+    """
     df = pd.DataFrame()
     for name in kwargs:
         try:
@@ -41,6 +71,19 @@ def data2csv(fout, **kwargs):
 
 
 def visualize(model, xtr, ytr, xte, yte):
+    """ Plots 1D or 2D visualization of train/test data and epistemic prediction
+
+    Args:
+        model: EpiModel
+        xtr: input train data
+        ytr: output train data
+        xte: input test data
+        yte: output test data
+
+    Returns:
+        modelte: model prediction at test inputs
+        epi: epistemic uncertaint at test inputs
+    """
     ntr, dx = xtr.shape
     if dx == 1:
         modelfig = plt.figure(figsize=(10, 5))
@@ -85,13 +128,3 @@ def visualize(model, xtr, ytr, xte, yte):
         modelte, epi = None, None
     return modelte, epi
 
-
-def classvar2file(class_to_store, fout):
-    import inspect
-    import json
-    att = inspect.getmembers(class_to_store,
-                             lambda a: not (inspect.isroutine(a)))
-    pdict = dict([a for a in att if not (a[0].startswith('_') or
-                                         a[0].endswith('_'))])
-    with open(fout, 'w') as json_file:
-        json.dump(pdict, json_file)
