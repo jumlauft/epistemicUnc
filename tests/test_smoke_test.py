@@ -1,4 +1,4 @@
-from src import run
+from src.run import main
 import numpy as np
 import os
 def test_main():
@@ -13,7 +13,7 @@ def test_main():
     np.savetxt(fnametr, np.concatenate((xtr, ytr), axis=1), delimiter=',')
     np.savetxt(fnamete, np.concatenate((xte, yte), axis=1), delimiter=',')
 
-    run.main(True)
+    main(True)
 
     os.remove(fnametr)
     os.remove(fnamete)

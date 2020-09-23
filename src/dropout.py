@@ -2,8 +2,8 @@
 import numpy as np
 from src.epimodel import EpiModel
 import tensorflow as tf
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.layers import Dense, InputLayer, Activation
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, InputLayer
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import optimizers as tfo
 
