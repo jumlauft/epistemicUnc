@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, InputLayer, Activation
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.optimizers import RMSprop
+from tensorflow import optimizers as tfo
 
 
 class PermaDropout(tf.keras.layers.Layer):
@@ -47,7 +47,7 @@ class Dropout(EpiModel):
         self.model.add(PermaDropout(rate=DROPOUT_RATE))
         self.model.add(Dense(N_HIDDEN, activation="relu"))
         self.model.add(Dense(self.DY))
-        self.model.compile(optimizer=RMSprop(learning_rate=LEARNING_RATE),
+        self.model.compile(optimizer=tfo.RMSprop(learning_rate=LEARNING_RATE),
                            loss='mean_squared_error')
 
     def train(self, xtr, ytr, display_progress=False):
