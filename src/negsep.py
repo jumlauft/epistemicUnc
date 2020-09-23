@@ -7,9 +7,10 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import math
 from src.epimodel import EpiModel
 
+
 class Negsep(EpiModel):
-    def __init__(self, R_EPI = 1, N_EPI = 2, TRAIN_EPOCHS = 5,TRAIN_ITER = 2,
-                N_HIDDEN = 10, LEARNING_RATE = 0.01,**kwargs):
+    def __init__(self, R_EPI=1, N_EPI=2, TRAIN_EPOCHS=5, TRAIN_ITER=2,
+                 N_HIDDEN=10, LEARNING_RATE=0.01, **kwargs):
         """ Online disturbance model to differentiate types of uncertainties
 
         Args:
@@ -72,8 +73,7 @@ class Negsep(EpiModel):
         ypred, epi = self.model_all.predict(self._scaler.transform(x))
         return ypred, MinMaxScaler().fit_transform(epi)
 
-
-    def train(self, xtr, ytr, display_progress = False):
+    def train(self, xtr, ytr, display_progress=False):
         """ Adds new training data points to the disturbance model
 
         Selects data to be added and triggers retraining if necessary
@@ -81,21 +81,25 @@ class Negsep(EpiModel):
         Args:
             xtr: input of data to be added
             ytr: output of data to be added
-            epi_pred: epistemic uncertainty prediction at xtr
+            display_progress: boolean
         """
 
         xtra = self._scaler.fit_transform(xtr)
         self.x_epi, self.y_epi = self._generate_xy_epi(xtra)
-        
+
         cw = compute_class_weight('balanced', np.unique(self.y_epi),
                                   self.y_epi.flatten())
+        loss = []
         for i in range(self.TRAIN_ITER):
-            hist_epi = self.model_epi.fit(self.x_epi, self.y_epi, class_weight=cw,
+            hist_epi = self.model_epi.fit(self.x_epi, self.y_epi,
+                                          class_weight=cw,
                                           epochs=self.TRAIN_EPOCHS,
                                           verbose=int(display_progress))
+            loss.extend(hist_epi.history['loss'])
             hist = self.model_mean.fit(xtra, ytr,
                                        epochs=self.TRAIN_EPOCHS, verbose=0)
-        return hist.history['loss']
+            loss.extend(hist.history['loss'])
+        return loss
 
     def _generate_xy_epi(self, xtra):
         """ Generates artificial data points for epistemic uncertainty estimate
@@ -119,7 +123,7 @@ class Negsep(EpiModel):
         # Generate uncertain points
         cov = self.R_EPI
         Nepi = self.N_EPI * self.DX
-        
+
         if len(tf.config.list_physical_devices('GPU')) == 0:
             from scipy.spatial.distance import cdist
 
@@ -130,7 +134,7 @@ class Negsep(EpiModel):
             for x in xtra:
                 xepi = np.random.multivariate_normal(x, cov_mat, Nepi)
                 x_epilist.append(xepi)
-                distance.extend(cdist(xepi,xtra).min(axis=1))
+                distance.extend(cdist(xepi, xtra).min(axis=1))
             x_epi = np.concatenate(x_epilist, axis=0)
             d = np.array(distance)
         else:
@@ -138,39 +142,41 @@ class Negsep(EpiModel):
             from numba.cuda.random import create_xoroshiro128p_states, \
                 xoroshiro128p_normal_float32
             print('Sampling EPI points on GPU')
-            Xtr = np.ascontiguousarray(xtra, dtype = np.float32)
+            xtr = np.ascontiguousarray(xtra, dtype=np.float32)
+
             # cuda.select_device(1)
             @cuda.jit
-            def generate_rand(rng_states, Xtr, cov, Xepi, d):
-                thread_id = cuda.grid(1)
-                ntr, Dx = Xtr.shape
-                if thread_id < ntr:
+            def generate_rand(rng_states, xtr, cov, Xepi, d):
+                i = cuda.grid(1)
+                ntr, dx = xtr.shape
+                if i < ntr:
                     # Generate random points
                     for nepi in range(Nepi):
-                        for dx in range(Dx):
-                            Xepi[thread_id,dx,nepi] = Xtr[thread_id,dx] + math.sqrt(float(cov)) * \
-                            xoroshiro128p_normal_float32(rng_states, thread_id) 
-                    # Compute distances
+                        for dx in range(dx):
+                            Xepi[i, dx, nepi] = xtr[i, dx] + \
+                                                math.sqrt(float(cov)) * \
+                                                xoroshiro128p_normal_float32(
+                                                    rng_states, i)
+                            # Compute distances
                     for nepi in range(Nepi):
                         smallest = 1e9
                         for nt in range(ntr):
                             dist = 0
-                            for dx in range(Dx):
-                                dist += (Xepi[thread_id,dx,nepi] - Xtr[nt,dx])**2
+                            for dx in range(dx):
+                                dist += (Xepi[i, dx, nepi] - xtr[nt, dx]) ** 2
                             if dist < smallest:
                                 smallest = dist
-                        d[thread_id,nepi] = smallest
+                        d[i, nepi] = smallest
 
             threads_per_block = 128
             blocks_per_grid = math.ceil(ntr / threads_per_block)
             rng_states = create_xoroshiro128p_states(ntr, seed=1)
-            x_epi = np.zeros((ntr,self.DX,Nepi), dtype=np.float32)
-            d = np.zeros((ntr,Nepi), dtype=np.float32)
-            generate_rand[blocks_per_grid, threads_per_block](rng_states, Xtr, cov, x_epi,d)
-            x_epi = x_epi.reshape(-1,self.DX)
-        
+            x_epi = np.zeros((ntr, self.DX, Nepi), dtype=np.float32)
+            d = np.zeros((ntr, Nepi), dtype=np.float32)
+            generate_rand[blocks_per_grid, threads_per_block](rng_states, xtr,
+                                                              cov, x_epi, d)
+            x_epi = x_epi.reshape(-1, self.DX)
 
-        
         y_epi = np.ones((x_epi.shape[0], 1))
         idx = np.argpartition(d.reshape(-1), ntr)
 
@@ -178,8 +184,6 @@ class Negsep(EpiModel):
         # d = x_epi.reshape(1, -1, self.DX) - xtra.reshape(-1, 1, self.DX)
         # distance = np.sum(d ** 2, axis=2)
         # idx = np.argpartition(distance.min(axis=0), ntr)
-
-
 
         # replace by training data input and turn into certain points
         y_epi[idx[:ntr], :] = 0
@@ -191,4 +195,3 @@ class Negsep(EpiModel):
 
     def get_y_epi(self):
         return self.y_epi
-

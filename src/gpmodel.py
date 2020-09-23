@@ -4,7 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 class GPmodel(EpiModel):
-    def __init__(self, ARD = True, LENGTHSCALE = 1 ,**kwargs):
+    def __init__(self, ARD=True, LENGTHSCALE=1, **kwargs):
         """ GP model
         Args:
             dx (int): input dimension
@@ -18,12 +18,11 @@ class GPmodel(EpiModel):
         """
         super().__init__(**kwargs)
 
-        self.kernel = GPy.kern.RBF(input_dim=self.DX, ARD = ARD,
-                              lengthscale=LENGTHSCALE)
+        self.kernel = GPy.kern.RBF(input_dim=self.DX, ARD=ARD,
+                                   lengthscale=LENGTHSCALE)
         self.GP = None
 
-
-    def train(self, xtr, ytr, display_progress = False):
+    def train(self, xtr, ytr, display_progress=False):
         """ Trains the neural network based on the current data
 
         Training iterates between training the disturbance output and the
@@ -45,4 +44,3 @@ class GPmodel(EpiModel):
         """
         (ypred, epi) = self.GP.predict_noiseless(x)
         return ypred, MinMaxScaler().fit_transform(epi)
-

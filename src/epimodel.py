@@ -12,9 +12,9 @@ class EpiModel:
         ypredtr, epitr = self.predict(xtr)
         return eval_discounted_mse(yte, ypredte, epite, ytr, ypredtr, epitr)
 
-    def predict(self,x):
+    def predict(self, x):
         n = x.shape[0]
-        return np.zeros((n,self.DY)), np.ones((n,))
+        return np.zeros((n, self.DY)), np.ones((n,))
 
     def compare(self, xte, model):
         _, epi = self.predict(xte)
