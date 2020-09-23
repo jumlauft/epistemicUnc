@@ -1,6 +1,6 @@
 #rebuild from https://github.com/yaringal/DropoutUncertaintyDemos/blob/master/convnetjs/regression_uncertainty.js
 import numpy as np
-from epimodel import EpiModel
+from src.epimodel import EpiModel
 import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, InputLayer, Activation
@@ -28,8 +28,8 @@ class PermaDropout(tf.keras.layers.Layer):
         return config
 
 class Dropout(EpiModel):
-    def __init__(self, N_HIDDEN = 50, TRAIN_EPOCHS = 25, LEARNING_RATE = 0.01, 
-                 N_SAMPLES = 100, DROPOUT_RATE = 0.05,  **kwargs):
+    def __init__(self, N_HIDDEN = 10, TRAIN_EPOCHS = 10, LEARNING_RATE = 0.01,
+                 N_SAMPLES = 10, DROPOUT_RATE = 0.05,  **kwargs):
         super().__init__(**kwargs)
        
         self.N_SAMPLES = N_SAMPLES

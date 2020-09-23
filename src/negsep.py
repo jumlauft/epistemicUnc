@@ -5,11 +5,11 @@ from tensorflow.keras.layers import Dense, Input
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import math
-from epimodel import EpiModel
+from src.epimodel import EpiModel
 
 class Negsep(EpiModel):
-    def __init__(self, R_EPI = 1, N_EPI = 2, TRAIN_EPOCHS = 10,TRAIN_ITER = 5,
-                N_HIDDEN = 50, LEARNING_RATE = 0.01,**kwargs):
+    def __init__(self, R_EPI = 1, N_EPI = 2, TRAIN_EPOCHS = 5,TRAIN_ITER = 2,
+                N_HIDDEN = 10, LEARNING_RATE = 0.01,**kwargs):
         """ Online disturbance model to differentiate types of uncertainties
 
         Args:

@@ -1,7 +1,7 @@
 # https://matthewmcateer.me/blog/a-quick-intro-to-bayesian-neural-networks/
 # https://github.com/tensorflow/probability/issues/815
 import numpy as np
-from epimodel import EpiModel
+from src.epimodel import EpiModel
 import tensorflow as tf
 import tensorflow_probability as tfp
 from tensorflow.keras.models import Model, Sequential
@@ -14,8 +14,8 @@ tfk = tf.keras
 
 
 class BNN(EpiModel):
-    def __init__(self, N_HIDDEN=10, TRAIN_EPOCHS=25, LEARNING_RATE=0.01,
-                 N_SAMPLES=100, **kwargs):
+    def __init__(self, N_HIDDEN = 10, TRAIN_EPOCHS = 20, LEARNING_RATE = 0.01,
+                 N_SAMPLES=10, **kwargs):
         super().__init__(**kwargs)
 
         self.N_SAMPLES = N_SAMPLES

@@ -1,11 +1,10 @@
-import numpy as np
 import GPy
-from epimodel import EpiModel
+from src.epimodel import EpiModel
 from sklearn.preprocessing import MinMaxScaler
 
 
 class GPmodel(EpiModel):
-    def __init__(self, ARD = True, LENGTHSCALE = 0.5 ,**kwargs):
+    def __init__(self, ARD = True, LENGTHSCALE = 1 ,**kwargs):
         """ GP model
         Args:
             dx (int): input dimension
