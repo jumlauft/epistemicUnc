@@ -25,9 +25,9 @@ def main(SMOKE_TEST):
         np.random.seed(1)
         # Read data
         print('Read data: ' + data_name + '...')
-        train_data = np.genfromtxt('../data/' + data_name + '_train.csv',
+        train_data = np.genfromtxt('./data/' + data_name + '_train.csv',
                                    delimiter=',')
-        test_data = np.genfromtxt('../data/' + data_name + '_test.csv',
+        test_data = np.genfromtxt('./data/' + data_name + '_test.csv',
                                   delimiter=',')
 
         xtr, ytr = train_data[:, :-1], train_data[:, -1:]
@@ -74,14 +74,14 @@ def main(SMOKE_TEST):
             if dx == 1 or dx == 2:
                 modelte, epi = visualize(model, xtr, ytr, xte, yte)
 
-                data2csv('../results/' + data_name + '_' + model_name + '.csv',
+                data2csv('./results/' + data_name + '_' + model_name + '.csv',
                          xtr=xtr, ytr=ytr, xte=xte, yte=yte,
                          modelte=modelte, epi=epi, loss=loss,
                          x_epi=model.get_x_epi(), y_epi=model.get_y_epi())
         # Print and save results
         tab = tabulate([a.values() for a in results], headers=results[0].keys())
         print(tab)
-        with open('../results/' + data_name + '.txt', 'w') as f:
+        with open('./results/' + data_name + '.txt', 'w') as f:
             print(tab, file=f)
 
     print('Pau')
