@@ -13,12 +13,12 @@ def main(SMOKE_TEST):
     # Add Datasets
     data_sets = []
     if not SMOKE_TEST:
-        data_sets.append("synthetic_data_1D")
-        data_sets.append("synthetic_data_1D_split")
-        data_sets.append("synthetic_data_2D_square")
-        data_sets.append("synthetic_data_2D_gaussian")
-        data_sets.append("pmsm_temperature")
-        data_sets.append("sarcos")
+        data_sets.append("synthetic_data_1D_centered")
+        # data_sets.append("synthetic_data_1D_split")
+        # data_sets.append("synthetic_data_2D_square")
+        # data_sets.append("synthetic_data_2D_gaussian")
+        # data_sets.append("pmsm_temperature")
+        # data_sets.append("sarcos")
     else:
         data_sets.append("smoke")
 
@@ -26,7 +26,7 @@ def main(SMOKE_TEST):
         np.random.seed(1)
 
         # Read data
-        print('Read data: ' + data_name + '...')
+        print('Reading: ' + data_name + '...')
         train_data = np.genfromtxt('./data/' + data_name + '_train.csv',
                                    delimiter=',')
         test_data = np.genfromtxt('./data/' + data_name + '_test.csv',
@@ -38,7 +38,7 @@ def main(SMOKE_TEST):
         ntr, dx = xtr.shape
         nte, dy = yte.shape
 
-        print('Read ' + str(ntr) + ' training  and ' + str(
+        print('Read ' + str(ntr) + ' training and ' + str(
             nte) + ' tests data points')
         print('Input dimension: ' + str(dx) + ', Output dimension: ' + str(dy))
 

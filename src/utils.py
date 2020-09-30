@@ -49,26 +49,27 @@ def eval_discounted_mse(yte, ypredte, epite, ytr, ypredtr, epitr):
 
 
 def data2csv(fout, **kwargs):
-    """ save numpy array upto 2 dimensions or lists to csv files
+    """ save lists or 1D/2D numpy arrays to csv
 
     Args:
-        fout: file name
-        **kwargs: numpy arrays or lists
+        fout: filename
+        **kwargs: arrays/lists to store
     """
-    df = pd.DataFrame()
+    dfs = []
     for name in kwargs:
         try:
+            if type(kwargs[name]) is list:
+                kwargs[name] = np.array(kwargs[name])
             if kwargs[name].ndim == 1:
-                df[name] = kwargs[name]
+                dfs.append(pd.DataFrame(data = kwargs[name], columns = [name]))
             elif kwargs[name].ndim == 2:
                 for i, col in enumerate(kwargs[name].T):
-                    df[name + '_' + str(i)] = pd.Series(col)
+                    dfs.append(pd.DataFrame(data=col, columns=[name + '_' + str(i)]))
             else:
                 raise Exception("must be 1 or 2 dimensional")
-        except AttributeError:
-            pass
-    df.to_csv(fout)
-
+        except:
+            print('Ignored ' + name)
+    pd.concat(dfs,axis=1).to_csv(fout)
 
 def visualize(model, xtr, ytr, xte, yte):
     """ Plots 1D or 2D visualization of train/test data and epistemic prediction
@@ -103,7 +104,6 @@ def visualize(model, xtr, ytr, xte, yte):
         x_epi, y_epi = model.get_x_epi(), model.get_y_epi()
         if x_epi is not None:
             plt.plot(x_epi[:, 0], y_epi, 'o', color="green")
-        plt.show()
 
     elif dx == 2:
         modelfig = plt.figure(figsize=(10, 5))

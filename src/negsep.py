@@ -113,7 +113,7 @@ class Negsep(EpiModel):
 
         # Generate uncertain points (on GPU if available)
         cov = self.R_EPI
-        Nepi = self.N_EPI * self.DX
+        Nepi = self.N_EPI * self.DX + 1
 
         if len(tf.config.list_physical_devices('GPU')) == 0:
             from scipy.spatial.distance import cdist

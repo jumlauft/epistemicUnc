@@ -4,13 +4,13 @@ import urllib.request
 from scipy.io import loadmat
 
 # 1D
-name = "synthetic_data_1D"
+name = "synthetic_data_1D_centered"
 f = lambda x: np.sin(np.pi * x)
 fnametr = name + '_train.csv'
 if not os.path.exists(fnametr):
     np.random.seed(1)
-    ndtr = 100
-    xtr = 2 * np.random.rand(ndtr, 1) - 1
+    ndtr = 200
+    xtr = 4 * np.random.rand(ndtr, 1) - 1
     ytr = f(xtr)
     np.savetxt(fnametr, np.concatenate((xtr, ytr), axis=1), delimiter=',')
     print('Generated Data ' + fnametr)
@@ -56,7 +56,7 @@ else:
 
 # 2D Gaussian
 name = "synthetic_data_2D_gaussian"
-eps = 1e-6 * np.random.rand(1)
+eps = 1e-9 * np.random.rand(1)
 f = lambda x: np.sin(5 * x[:, :1]) / (5 * x[:, :1] + eps) + x[:, 1:] ** 2
 
 fnametr = name + '_train.csv'
@@ -95,11 +95,11 @@ fnametr = name + '_train.csv'
 if not os.path.exists(fnametr):
     np.random.seed(1)
     ndtr = 20
-    xtr1 = np.concatenate((np.linspace(0, 2, ndtr), 2 * np.ones(ndtr),
-                           np.linspace(2, 0, ndtr), 2 * np.zeros(ndtr)), axis=0)
-    xtr2 = np.concatenate((np.zeros(ndtr), np.linspace(0, 2, ndtr),
-                           2 * np.ones(ndtr), np.linspace(2, 0, ndtr)), axis=0)
-    xtr = np.concatenate((xtr1.reshape(-1, 1), xtr2.reshape(-1, 1)), axis=1) - 1
+    xtr1 = np.concatenate((np.linspace(-1, 1, ndtr), 1 * np.ones(ndtr),
+                           np.linspace(1, -1, ndtr), -1*np.ones(ndtr)), axis=0)
+    xtr2 = np.concatenate((-1*np.ones(ndtr), np.linspace(-1, 1, ndtr),
+                           1 * np.ones(ndtr), np.linspace(1, -1, ndtr)), axis=0)
+    xtr = np.concatenate((xtr1.reshape(-1, 1), xtr2.reshape(-1, 1)), axis=1)
     ytr = f(xtr)
     np.savetxt(fnametr, np.concatenate((xtr, ytr), axis=1), delimiter=',')
     print('Generated Data ' + fnametr)
