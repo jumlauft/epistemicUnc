@@ -17,5 +17,6 @@ def test_main():
 
     os.remove(fnametr)
     os.remove(fnamete)
-    os.remove('./results/smoke.txt')
+    for f in glob.glob('./results/smoke*.csv'):
+        os.remove(f)
 
