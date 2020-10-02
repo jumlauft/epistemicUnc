@@ -1,4 +1,4 @@
-from src.run import main
+from run import main
 import numpy as np
 import os
 def test_main():
