@@ -1,11 +1,11 @@
 import numpy as np
-from src.negsep import Negsep
-from src.dropout import Dropout
-from src.gpmodel import GPmodel
-from src.bnn import BNN
+from src import negsep
+from src import dropout
+from src import gpmodel
+from src import bnn
 from tabulate import tabulate
 from time import time
-from src.utils import visualize, data2csv
+from src import utils
 
 
 def main(SMOKE_TEST):
@@ -13,12 +13,12 @@ def main(SMOKE_TEST):
     # Add Datasets
     data_sets = []
     if not SMOKE_TEST:
+        data_sets.append("pmsm_temperature")
+        data_sets.append("sarcos")
         data_sets.append("synthetic_data_1D_centered")
-        # data_sets.append("synthetic_data_1D_split")
-        # data_sets.append("synthetic_data_2D_square")
-        # data_sets.append("synthetic_data_2D_gaussian")
-        # data_sets.append("pmsm_temperature")
-        # data_sets.append("sarcos")
+        data_sets.append("synthetic_data_1D_split")
+        data_sets.append("synthetic_data_2D_square")
+        data_sets.append("synthetic_data_2D_gaussian")
     else:
         data_sets.append("smoke")
 
@@ -45,14 +45,14 @@ def main(SMOKE_TEST):
 
         # Add Models
         models, results = [], []
-        models.append(GPmodel(dx=dx, dy=dy, ARD=True,
+        models.append(gpmodel.GPmodel(dx=dx, dy=dy, ARD=True,
                               LENGTHSCALE=0.5))
-        models.append(BNN(dx=dx, dy=dy, N_HIDDEN=50, TRAIN_EPOCHS=2000,
+        models.append(bnn.BNN(dx=dx, dy=dy, N_HIDDEN=50, TRAIN_EPOCHS=2000,
                           LEARNING_RATE=0.01, N_SAMPLES=1000, ))
-        models.append(Dropout(dx=dx, dy=dy, N_HIDDEN=50,
+        models.append(dropout.Dropout(dx=dx, dy=dy, N_HIDDEN=50,
                               TRAIN_EPOCHS=100, LEARNING_RATE=0.01,
                               N_SAMPLES=100, DROPOUT_RATE=0.05))
-        models.append(Negsep(dx=dx, dy=dy, N_HIDDEN=50,
+        models.append(negsep.Negsep(dx=dx, dy=dy, N_HIDDEN=50,
                              TRAIN_EPOCHS=20, TRAIN_ITER=5,
                              LEARNING_RATE=0.01, R_EPI=1, N_EPI=4))
 
@@ -76,9 +76,9 @@ def main(SMOKE_TEST):
 
             # Visualization
             if dx == 1 or dx == 2:
-                modelte, epi = visualize(model, xtr, ytr, xte, yte)
+                modelte, epi = utils.visualize(model, xtr, ytr, xte, yte)
 
-                data2csv('./results/' + data_name + '_' + model_name + '.csv',
+                utils.data2csv('./results/' + data_name + '_' + model_name + '.csv',
                          xtr=xtr, ytr=ytr, xte=xte, yte=yte,
                          modelte=modelte, epi=epi, loss=loss,
                          x_epi=model.get_x_epi(), y_epi=model.get_y_epi())

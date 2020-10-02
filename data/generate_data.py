@@ -10,7 +10,7 @@ fnametr = name + '_train.csv'
 if not os.path.exists(fnametr):
     np.random.seed(1)
     ndtr = 200
-    xtr = 4 * np.random.rand(ndtr, 1) - 1
+    xtr = 4 * np.random.rand(ndtr, 1) - 2
     ytr = f(xtr)
     np.savetxt(fnametr, np.concatenate((xtr, ytr), axis=1), delimiter=',')
     print('Generated Data ' + fnametr)
