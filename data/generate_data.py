@@ -78,7 +78,7 @@ if not os.path.exists(fnamete):
     nte = 1000
     ndte = np.sqrt(nte).astype(int)
     xte1, xte2 = np.meshgrid(np.linspace(-2, 2, ndte),
-                             np.linspace(-1, 1, ndte))
+                             np.linspace(-2, 2, ndte))
     xte = np.concatenate((xte1.reshape(-1, 1), xte2.reshape(-1, 1)), axis=1)
     yte = f(xte)
     np.savetxt(fnamete, np.concatenate((xte, yte), axis=1), delimiter=',')

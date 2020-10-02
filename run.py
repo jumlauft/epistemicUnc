@@ -14,11 +14,11 @@ def main(SMOKE_TEST):
     # Add Datasets
     data_sets = []
     if not SMOKE_TEST:
-        data_sets.append("pmsm_temperature")
-        data_sets.append("sarcos")
-        data_sets.append("1D_centered")
-        data_sets.append("1D_split")
-        data_sets.append("2D_square")
+        # data_sets.append("pmsm_temperature")
+        # data_sets.append("sarcos")
+        # data_sets.append("1D_centered")
+        # data_sets.append("1D_split")
+        # data_sets.append("2D_square")
         data_sets.append("2D_gaussian")
     else:
         data_sets.append("smoke")
@@ -83,6 +83,12 @@ def main(SMOKE_TEST):
                          xtr=xtr, ytr=ytr, xte=xte, yte=yte,
                          modelte=modelte, epi=epi, loss=loss,
                          x_epi=model.get_x_epi(), y_epi=model.get_y_epi())
+                if dx == 2:
+                    utils.data2csv(
+                        './results/' + data_name + '_' + model_name + '_surf.csv',
+                        xte=xte, yte=yte, modelte=modelte, epi=epi)
+
+
 
         # Print and save results
         df = pd.DataFrame(index=model_names,columns=mresults[0].keys(),
