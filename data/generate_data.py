@@ -4,7 +4,7 @@ import urllib.request
 from scipy.io import loadmat
 
 # 1D
-name = "synthetic_data_1D_centered"
+name = "1D_centered"
 f = lambda x: np.sin(np.pi * x)
 fnametr = name + '_train.csv'
 if not os.path.exists(fnametr):
@@ -29,7 +29,7 @@ else:
     print('Data existed ' + fnamete)
 
 # 1D split
-name = "synthetic_data_1D_split"
+name = "1D_split"
 f = lambda x: np.sin(np.pi * x)
 fnametr = name + '_train.csv'
 if not os.path.exists(fnametr):
@@ -55,7 +55,7 @@ else:
     print('Data existed ' + fnamete)
 
 # 2D Gaussian
-name = "synthetic_data_2D_gaussian"
+name = "2D_gaussian"
 eps = 1e-9 * np.random.rand(1)
 f = lambda x: np.sin(5 * x[:, :1]) / (5 * x[:, :1] + eps) + x[:, 1:] ** 2
 
@@ -88,7 +88,7 @@ else:
     print('Data existed ' + fnamete)
 
 # 2D Square
-name = "synthetic_data_2D_square"
+name = "2D_square"
 f = lambda x: np.sin(5 * x[:, :1]) / (5 * x[:, :1] + eps) + x[:, 1:] ** 2
 
 fnametr = name + '_train.csv'

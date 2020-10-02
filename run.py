@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from src import negsep
 from src import dropout
 from src import gpmodel
@@ -15,10 +16,10 @@ def main(SMOKE_TEST):
     if not SMOKE_TEST:
         data_sets.append("pmsm_temperature")
         data_sets.append("sarcos")
-        data_sets.append("synthetic_data_1D_centered")
-        data_sets.append("synthetic_data_1D_split")
-        data_sets.append("synthetic_data_2D_square")
-        data_sets.append("synthetic_data_2D_gaussian")
+        data_sets.append("1D_centered")
+        data_sets.append("1D_split")
+        data_sets.append("2D_square")
+        data_sets.append("2D_gaussian")
     else:
         data_sets.append("smoke")
 
@@ -44,35 +45,35 @@ def main(SMOKE_TEST):
 
 
         # Add Models
-        models, results = [], []
+        models, mresults = [], []
         models.append(gpmodel.GPmodel(dx=dx, dy=dy, ARD=True,
                               LENGTHSCALE=0.5))
         models.append(bnn.BNN(dx=dx, dy=dy, N_HIDDEN=50, TRAIN_EPOCHS=2000,
-                          LEARNING_RATE=0.01, N_SAMPLES=1000, ))
+                          LEARNING_RATE=0.01, N_SAMPLES=100, ))
         models.append(dropout.Dropout(dx=dx, dy=dy, N_HIDDEN=50,
                               TRAIN_EPOCHS=100, LEARNING_RATE=0.01,
                               N_SAMPLES=100, DROPOUT_RATE=0.05))
         models.append(negsep.Negsep(dx=dx, dy=dy, N_HIDDEN=50,
                              TRAIN_EPOCHS=20, TRAIN_ITER=5,
                              LEARNING_RATE=0.01, R_EPI=1, N_EPI=4))
-
+        model_names = [m.__class__.__name__ for m in models]
         for model in models:
             np.random.seed(1)
             model_name = model.__class__.__name__
-            results.append({'model_name': model_name})
+            mresults.append(dict()) #{'model_name': model_name}
             print(model_name + ':')
 
             # Training
             print('Training...')
             t0 = time()
             loss = model.train(xtr, ytr, display_progress=False)
-            results[-1].update({'ttrain': time() - t0})
+            mresults[-1].update({'ttrain': time() - t0})
 
             # Evaluation
             print('Evaluating...')
             t0 = time()
-            results[-1].update(model.evaluate(xte, yte, xtr, ytr))
-            results[-1].update({'tevaluate': time() - t0})
+            mresults[-1].update(model.evaluate(xte, yte, xtr, ytr))
+            mresults[-1].update({'tevaluate': time() - t0})
 
             # Visualization
             if dx == 1 or dx == 2:
@@ -84,10 +85,11 @@ def main(SMOKE_TEST):
                          x_epi=model.get_x_epi(), y_epi=model.get_y_epi())
 
         # Print and save results
-        tab = tabulate([a.values() for a in results], headers=results[0].keys())
-        print(tab)
-        with open('./results/' + data_name + '.txt', 'w') as f:
-            print(tab, file=f)
+        df = pd.DataFrame(index=model_names,columns=mresults[0].keys(),
+                         data=[a.values() for a in mresults])
+        df.to_csv('./results/' + data_name + '.csv')
+        print(tabulate(df, headers="keys"))
+
 
     print('Pau')
 
