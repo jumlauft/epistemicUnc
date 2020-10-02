@@ -1,6 +1,6 @@
 from run import main
 import numpy as np
-import os
+import os, glob
 def test_main():
     name = "smoke"
     fnametr = './data/' + name + '_train.csv'
