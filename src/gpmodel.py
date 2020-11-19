@@ -1,7 +1,7 @@
 import GPy
 from src.epimodel import EpiModel
 from sklearn.preprocessing import MinMaxScaler
-
+import numpy as np
 
 class GPmodel(EpiModel):
     def __init__(self, ARD=True, LENGTHSCALE=1, **kwargs):
@@ -39,5 +39,5 @@ class GPmodel(EpiModel):
         Returns:
             mean, epistemic uncertainty (scaled to [0,1])
         """
-        (ypred, epi) = self.GP.predict_noiseless(x)
-        return ypred, MinMaxScaler().fit_transform(epi)
+        (ypred, yvar) = self.GP.predict_noiseless(x)
+        return ypred, MinMaxScaler().fit_transform(np.sqrt(yvar))
